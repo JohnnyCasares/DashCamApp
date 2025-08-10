@@ -8,14 +8,19 @@ import com.kasahirotech.dashcamapp.databinding.SettingItemBinding
 import com.kasahirotech.dashcamapp.interfaces.SettingItem
 
 class SettingsAdapter(
-    private var settings: List<SettingItem>
+    private var settings: List<SettingItem>,
+    private val onItemClicked: (SettingItem) -> Unit
 
 ) : RecyclerView.Adapter<SettingsAdapter.SettingsViewHolder>() {
 
     inner class SettingsViewHolder(private val binding: SettingItemBinding) :
         RecyclerView.ViewHolder(binding.root) {
         fun bind(setting: SettingItem) {
-            binding.tvTtile.text = setting.title
+            binding.tvTitle.text = setting.title
+
+            binding.root.setOnClickListener {
+                onItemClicked(setting)
+            }
 
         }
     }
@@ -35,7 +40,6 @@ class SettingsAdapter(
     ) {
 
         holder.bind(settings[position])
-//        Log.v("SETTING ADAPTER", "The title: ${settings[position].title}")
     }
 
     override fun getItemCount(): Int {

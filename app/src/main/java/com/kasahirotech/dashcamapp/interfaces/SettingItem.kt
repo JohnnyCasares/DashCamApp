@@ -8,5 +8,5 @@ interface SettingItem {
    val title: String // Resource ID for the menu item title
     val id: Int // ID in the xml or unique identifier
 
-//  fun openScreen(context: Context, fragmentManager: FragmentManager?)
+  fun onItemClick(context: Context, fragmentManager: FragmentManager?)
 }

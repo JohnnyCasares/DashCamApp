@@ -33,7 +33,9 @@ class Settings : AppCompatActivity() {
             settingOne, settingTwo
         )
 
-        val adapter = SettingsAdapter(settingsList)
+        val adapter = SettingsAdapter(settingsList){
+            clickedSettingItem ->  clickedSettingItem.onItemClick(this, null)
+        }
 
         binding.rvSettings.adapter = adapter
         binding.rvSettings.layoutManager = LinearLayoutManager(this)
