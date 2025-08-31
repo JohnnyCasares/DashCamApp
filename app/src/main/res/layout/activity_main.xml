@@ -18,8 +18,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        />
+        app:layout_constraintTop_toTopOf="parent" />
 
 
     <ImageButton
@@ -27,25 +26,25 @@
         android:layout_width="50dp"
         android:layout_height="50dp"
         android:scaleType="fitCenter"
+        android:src="@drawable/ic_gallery_search"
         app:layout_constraintBottom_toTopOf="@+id/btnRecordAndStop"
         app:layout_constraintEnd_toStartOf="@+id/btnSettings"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imageView"
-        app:srcCompat="@drawable/ic_gallery" />
+        app:layout_constraintTop_toBottomOf="@+id/imageView" />
 
     <ImageButton
         android:id="@+id/btnSettings"
         android:layout_width="50dp"
         android:layout_height="50dp"
         android:scaleType="fitCenter"
+        android:src="@drawable/ic_hamburger_menu"
         android:text="menu"
         app:layout_constraintBottom_toBottomOf="@+id/imgBtnGallery"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toEndOf="@+id/imgBtnGallery"
-        app:layout_constraintTop_toTopOf="@+id/imgBtnGallery"
-        app:srcCompat="@drawable/ic_hamburger_menu" />
+        app:layout_constraintTop_toTopOf="@+id/imgBtnGallery" />
 
     <Button
         android:id="@+id/btnRecordAndStop"
