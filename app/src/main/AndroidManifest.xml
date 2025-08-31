@@ -16,9 +16,6 @@
             android:name=".settings.Settings"
             android:exported="false" />
         <activity
-            android:name=".settings.SettingItem"
-            android:exported="false" />
-        <activity
             android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
