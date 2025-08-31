@@ -4,20 +4,15 @@ import android.content.Context
 import android.util.Log
 import android.widget.Toast
 import androidx.fragment.app.FragmentManager
+import com.kasahirotech.dashcamapp.R
 import com.kasahirotech.dashcamapp.interfaces.SettingItem
 
-class SettingsTest {
-}
 
+class SettingOneTest : SettingItem {
+    override val icon = R.drawable.ic_launcher_foreground
 
+    override val title = "Setting 1"
 
-
-class SettingOneTest: SettingItem{
-    override val icon: String = ""
-
-    override val title: String = "Setting 1"
-
-    override val id: Int = 1
     override fun onItemClick(
         context: Context,
         fragmentManager: FragmentManager?
@@ -28,12 +23,12 @@ class SettingOneTest: SettingItem{
 
 
 }
-class SettingTwoTest: SettingItem{
-    override val icon: String = ""
+
+class SettingTwoTest : SettingItem {
+    override val icon = R.drawable.ic_launcher_background
 
     override val title: String = "Setting 2"
 
-    override val id: Int = 2
     override fun onItemClick(
         context: Context,
         fragmentManager: FragmentManager?

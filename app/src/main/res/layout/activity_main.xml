@@ -9,17 +9,9 @@
     tools:layout_editor_absoluteX="0dp"
     tools:layout_editor_absoluteY="-38dp">
 
-    <Button
-        android:id="@+id/btnRecordAndStop"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Start Recording"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toStartOf="parent"></Button>
 
     <ImageView
+        android:src="@drawable/highway_car"
         android:id="@+id/imageView"
         android:layout_width="365dp"
         android:layout_height="438dp"
@@ -40,5 +32,15 @@
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/imageView" />
+
+    <Button
+        android:id="@+id/btnRecordAndStop"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Start Recording"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

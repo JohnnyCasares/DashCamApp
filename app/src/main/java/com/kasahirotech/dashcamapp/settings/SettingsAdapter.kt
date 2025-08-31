@@ -17,7 +17,7 @@ class SettingsAdapter(
         RecyclerView.ViewHolder(binding.root) {
         fun bind(setting: SettingItem) {
             binding.tvTitle.text = setting.title
-
+            binding.ivIcon.setImageResource(setting.icon)
             binding.root.setOnClickListener {
                 onItemClicked(setting)
             }
