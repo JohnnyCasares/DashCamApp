@@ -6,7 +6,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.kasahirotech.dashcamapp.R
 
 import com.kasahirotech.dashcamapp.databinding.ActivitySettingsBinding
 import com.kasahirotech.dashcamapp.interfaces.SettingItem

@@ -10,8 +10,8 @@
     tools:layout_editor_absoluteY="-38dp">
 
 
-    <ImageView
-        android:id="@+id/imageView"
+    <androidx.camera.view.PreviewView
+        android:id="@+id/viewFinder"
         android:layout_width="365dp"
         android:layout_height="438dp"
         android:layout_marginTop="16dp"
@@ -31,7 +31,7 @@
         app:layout_constraintEnd_toStartOf="@+id/btnSettings"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imageView" />
+        app:layout_constraintTop_toBottomOf="@+id/viewFinder" />
 
     <ImageButton
         android:id="@+id/btnSettings"
