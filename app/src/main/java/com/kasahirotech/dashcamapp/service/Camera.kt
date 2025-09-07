@@ -23,23 +23,31 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.PermissionChecker
 import androidx.lifecycle.LifecycleOwner
 import com.kasahirotech.dashcamapp.MainActivity
+import com.kasahirotech.dashcamapp.R
 import com.kasahirotech.dashcamapp.databinding.ActivityMainBinding
+
 import com.kasahirotech.dashcamapp.interfaces.CameraService
 import java.text.SimpleDateFormat
 import java.util.Locale
 
-class Camera : CameraService {
-    override var imageCapture: ImageCapture? = null
-    override var videoCapture: VideoCapture<Recorder>? = null
-    override var recording: Recording? = null
+class Camera
+    (
+
+    private val context: Context,
+    private val binding: ActivityMainBinding,
+    private val lifecycleOwner: LifecycleOwner,
+    private val surfaceProvider: Preview.SurfaceProvider,
+    private val contentResolver: ContentResolver,
+
+    ) : CameraService {
+
+    private var imageCapture: ImageCapture? = null
+    private var videoCapture: VideoCapture<Recorder>? = null
+    private var recording: Recording? = null
 
 
-    override fun startCamera(
-        context: Context,
-        lifecycleOwner: LifecycleOwner,
-        surfaceProvider: Preview.SurfaceProvider
-    ) {
-// The ProcessCameraProvider instance  is binded to the parent this. Binds the lifecycle of the camera to the owner
+    override fun startCamera() {
+// The ProcessCameraProvider instance is bound to the parent this. Binds the lifecycle of the camera to the owner
         val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
 
         cameraProviderFuture.addListener({
@@ -74,10 +82,7 @@ class Camera : CameraService {
         }, ContextCompat.getMainExecutor(context))
     }
 
-    override fun captureVideo(
-        context: Context,
-         contentResolver: ContentResolver
-    ) {
+    override fun captureVideo() {
 
         val videoCapture = this.videoCapture ?: return
 
@@ -105,71 +110,62 @@ class Camera : CameraService {
             .setContentValues(contentValues)
             .build()
 
-//        recording = videoCapture.output
-//            .prepareRecording(this, mediaStoreOutputOptions)
-//            .apply {
-//                if (PermissionChecker.checkSelfPermission(
-//                        context@MainActivity,
-//                        Manifest.permission.RECORD_AUDIO
-//                    ) ==
-//                    PermissionChecker.PERMISSION_GRANTED
-//                ) {
-//                    withAudioEnabled()
-//                }
-//            }
-//            .start(ContextCompat.getMainExecutor(context)) { recordEvent ->
-//                when (recordEvent) {
-//                    is VideoRecordEvent.Start -> {
-//                        binding.videoCaptureButton.apply {
-//                            text = getString(R.string.stop_capture)
-//                            isEnabled = true
-//                        }
-//                    }
-//
-//                    is VideoRecordEvent.Finalize -> {
-//                        if (!recordEvent.hasError()) {
-//                            val msg = "Video capture succeeded: " +
-//                                    "${recordEvent.outputResults.outputUri}"
-//                            Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT)
-//                                .show()
-//                            Log.d(com.kasahirotech.cameraxcodelab.MainActivity.Companion.TAG, msg)
-//                        } else {
-//                            recording?.close()
-//                            recording = null
-//                            Log.e(
-//                                com.kasahirotech.cameraxcodelab.MainActivity.Companion.TAG, "Video capture ends with error: " +
-//                                        "${recordEvent.error}"
-//                            )
-//                        }
-//                        binding.videoCaptureButton.apply {
-//                            text = getString(R.string.start_capture)
-//                            isEnabled = true
-//                        }
-//                    }
-//                }
-//            }
+        recording = videoCapture.output
+            .prepareRecording(context, mediaStoreOutputOptions)
+            .apply {
+                if (PermissionChecker.checkSelfPermission(
+                        context,
+                        Manifest.permission.RECORD_AUDIO
+                    ) ==
+                    PermissionChecker.PERMISSION_GRANTED
+                ) {
+                    withAudioEnabled()
+                }
+            }
+            .start(ContextCompat.getMainExecutor(context)) { recordEvent ->
+                when (recordEvent) {
+                    is VideoRecordEvent.Start -> {
+                        binding.btnRecordAndStop.apply {
+                            text =  context.getString(R.string.stop_capture)
+                            isEnabled = true
+                        }
+                    }
+
+                    is VideoRecordEvent.Finalize -> {
+                        if (!recordEvent.hasError()) {
+                            val msg = "Video capture succeeded: " +
+                                    "${recordEvent.outputResults.outputUri}"
+                            Toast.makeText(context, msg, Toast.LENGTH_SHORT)
+                                .show()
+                            Log.d(TAG, msg)
+                        } else {
+                            recording?.close()
+                            recording = null
+                            Log.e(
+                                TAG,
+                                "Video capture ends with error: " +
+                                        "${recordEvent.error}"
+                            )
+                        }
+                        binding.btnRecordAndStop.apply {
+                            text = context.getString(R.string.start_capture)
+                            isEnabled = true
+                        }
+                    }
+                }
+            }
 
     }
 
 
-
-    override fun takePhoto(context: Context) {
+    override fun takePhoto() {
 
     }
-
 
     companion object {
         private const val TAG = "Camera Class"
         private const val FILENAME_FORMAT = "yyyy-MM-dd-HH-mm-ss-SSS"
-        private val REQUIRED_PERMISSIONS =
-            mutableListOf(
-                Manifest.permission.CAMERA,
-                Manifest.permission.RECORD_AUDIO
-            ).apply {
-                if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
-                    add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                }
-            }.toTypedArray()
+
     }
 
 }
