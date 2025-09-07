@@ -1,13 +1,12 @@
 package com.kasahirotech.dashcamapp.service
 
 import android.Manifest
-import android.content.ContentResolver
 import android.content.ContentValues
-import android.content.Context
 import android.os.Build
 import android.provider.MediaStore
 import android.util.Log
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.Preview
@@ -21,23 +20,18 @@ import androidx.camera.video.VideoCapture
 import androidx.camera.video.VideoRecordEvent
 import androidx.core.content.ContextCompat
 import androidx.core.content.PermissionChecker
-import androidx.lifecycle.LifecycleOwner
-import com.kasahirotech.dashcamapp.MainActivity
 import com.kasahirotech.dashcamapp.R
 import com.kasahirotech.dashcamapp.databinding.ActivityMainBinding
-
 import com.kasahirotech.dashcamapp.interfaces.CameraService
 import java.text.SimpleDateFormat
 import java.util.Locale
 
 class Camera
     (
-
-    private val context: Context,
+    private val activity: AppCompatActivity,
     private val binding: ActivityMainBinding,
-    private val lifecycleOwner: LifecycleOwner,
     private val surfaceProvider: Preview.SurfaceProvider,
-    private val contentResolver: ContentResolver,
+
 
     ) : CameraService {
 
@@ -48,12 +42,12 @@ class Camera
 
     override fun startCamera() {
 // The ProcessCameraProvider instance is bound to the parent this. Binds the lifecycle of the camera to the owner
-        val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
+        val cameraProviderFuture = ProcessCameraProvider.getInstance(activity)
 
         cameraProviderFuture.addListener({
             //Preview
             val preview = Preview.Builder().build().also {
-                it.setSurfaceProvider(surfaceProvider)
+                it.surfaceProvider = surfaceProvider
             }
             imageCapture = ImageCapture.Builder().build()
 
@@ -72,14 +66,14 @@ class Camera
 
 
                 cameraProvider.bindToLifecycle(
-                    lifecycleOwner, cameraSelector, preview, videoCapture
+                    activity, cameraSelector, preview, videoCapture
                 )
 
             } catch (exc: Exception) {
                 Log.e(TAG, " Failed to get camera provider or binding use cases", exc)
             }
             //ContextCompat.getMainExecutor() as the second argument. This returns an Executor that runs on the main thread.
-        }, ContextCompat.getMainExecutor(context))
+        }, ContextCompat.getMainExecutor(activity))
     }
 
     override fun captureVideo() {
@@ -106,15 +100,15 @@ class Camera
         }
 
         val mediaStoreOutputOptions = MediaStoreOutputOptions
-            .Builder(contentResolver, MediaStore.Video.Media.EXTERNAL_CONTENT_URI)
+            .Builder(activity.contentResolver, MediaStore.Video.Media.EXTERNAL_CONTENT_URI)
             .setContentValues(contentValues)
             .build()
 
         recording = videoCapture.output
-            .prepareRecording(context, mediaStoreOutputOptions)
+            .prepareRecording(activity, mediaStoreOutputOptions)
             .apply {
                 if (PermissionChecker.checkSelfPermission(
-                        context,
+                        activity,
                         Manifest.permission.RECORD_AUDIO
                     ) ==
                     PermissionChecker.PERMISSION_GRANTED
@@ -122,11 +116,11 @@ class Camera
                     withAudioEnabled()
                 }
             }
-            .start(ContextCompat.getMainExecutor(context)) { recordEvent ->
+            .start(ContextCompat.getMainExecutor(activity)) { recordEvent ->
                 when (recordEvent) {
                     is VideoRecordEvent.Start -> {
                         binding.btnRecordAndStop.apply {
-                            text =  context.getString(R.string.stop_capture)
+                            text = activity.getString(R.string.stop_capture)
                             isEnabled = true
                         }
                     }
@@ -135,7 +129,7 @@ class Camera
                         if (!recordEvent.hasError()) {
                             val msg = "Video capture succeeded: " +
                                     "${recordEvent.outputResults.outputUri}"
-                            Toast.makeText(context, msg, Toast.LENGTH_SHORT)
+                            Toast.makeText(activity, msg, Toast.LENGTH_SHORT)
                                 .show()
                             Log.d(TAG, msg)
                         } else {
@@ -148,7 +142,7 @@ class Camera
                             )
                         }
                         binding.btnRecordAndStop.apply {
-                            text = context.getString(R.string.start_capture)
+                            text = activity.getString(R.string.start_capture)
                             isEnabled = true
                         }
                     }

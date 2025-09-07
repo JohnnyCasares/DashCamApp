@@ -12,7 +12,7 @@ import com.kasahirotech.dashcamapp.settings.Settings
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
- private lateinit var camera: Camera
+    private lateinit var camera: Camera
 
     private val activityResultLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -35,23 +35,13 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         camera = Camera(
-
-            context = this,
+            activity = this,
             binding = binding,
-            lifecycleOwner = this,
             surfaceProvider = binding.viewFinder.surfaceProvider,
-            contentResolver = contentResolver
         )
         setContentView(binding.root)
 
-        //Request camera permissions
-        if (Storage(this).allPermissionsGranted()) {
-            //Toast.makeText(baseContext, "Permission request allowed", Toast.LENGTH_SHORT)
-             camera.startCamera()
-        } else {
-            requestPermissions()
-        }
-
+        this.permissionCheck()
 
         binding.btnSettings.setOnClickListener {
             Intent(this, Settings::class.java).also {
@@ -66,5 +56,16 @@ class MainActivity : AppCompatActivity() {
 
     private fun requestPermissions() {
         activityResultLauncher.launch(Storage.REQUIRED_PERMISSIONS)
+    }
+
+    private fun permissionCheck() {
+        //Request camera permissions
+        if (Storage(this).allPermissionsGranted()) {
+            //Toast.makeText(baseContext, "Permission request allowed", Toast.LENGTH_SHORT)
+            camera.startCamera()
+        } else {
+            requestPermissions()
+            permissionCheck()
+        }
     }
 }
