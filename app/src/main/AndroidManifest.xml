@@ -26,6 +26,9 @@
             android:name=".settings.Settings"
             android:exported="false" />
         <activity
+            android:name=".screens.Gallery"
+            android:exported="false" />
+        <activity
             android:name=".MainActivity"
             android:exported="true">
             <intent-filter>

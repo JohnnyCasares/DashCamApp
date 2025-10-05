@@ -2,7 +2,6 @@ package com.kasahirotech.dashcamapp.service
 
 import android.Manifest
 import android.content.ContentValues
-import android.os.Build
 import android.provider.MediaStore
 import android.util.Log
 import android.widget.Toast
@@ -31,7 +30,7 @@ class Camera
     private val activity: AppCompatActivity,
     private val binding: ActivityMainBinding,
     private val surfaceProvider: Preview.SurfaceProvider,
-    ) : CameraService {
+) : CameraService {
 
     private var imageCapture: ImageCapture? = null
     private var videoCapture: VideoCapture<Recorder>? = null
@@ -92,9 +91,7 @@ class Camera
         val contentValues = ContentValues().apply {
             put(MediaStore.MediaColumns.DISPLAY_NAME, name)
             put(MediaStore.MediaColumns.MIME_TYPE, "video/mp4")
-            if (Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
-                put(MediaStore.Video.Media.RELATIVE_PATH, "Movies/DashCam")
-            }
+            put(MediaStore.Video.Media.RELATIVE_PATH, "Movies/DashCam")
         }
 
         val mediaStoreOutputOptions = MediaStoreOutputOptions

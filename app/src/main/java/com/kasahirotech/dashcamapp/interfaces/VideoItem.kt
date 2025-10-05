@@ -1,8 +1,6 @@
 package com.kasahirotech.dashcamapp.interfaces
 
-import android.content.Context
 import android.net.Uri
-import androidx.fragment.app.FragmentManager
 
 /**
  * This interface is a contract that every setting item option must follow

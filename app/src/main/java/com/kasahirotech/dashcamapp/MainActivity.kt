@@ -1,14 +1,10 @@
 package com.kasahirotech.dashcamapp
 
-import android.Manifest
 import android.content.Intent
-import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
 import com.kasahirotech.dashcamapp.databinding.ActivityMainBinding
 import com.kasahirotech.dashcamapp.screens.Gallery
 import com.kasahirotech.dashcamapp.service.Camera
@@ -49,15 +45,17 @@ class MainActivity : AppCompatActivity() {
         this.permissionCheck()
 
 
-//        binding.imgBtnGallery.setOnClickListener {
-//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-//                ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_VIDEO)
-//            }
-//
-//            Intent(this, Gallery::class.java).also {
-//                this.startActivity(it)
-//            }
-//        }
+        binding.imgBtnGallery.setOnClickListener {
+
+//                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+//                    ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_VIDEO)
+//                }
+
+
+            Intent(this, Gallery::class.java).also {
+                this.startActivity(it)
+            }
+        }
 
         binding.btnSettings.setOnClickListener {
             Intent(this, Settings::class.java).also {
@@ -81,7 +79,7 @@ class MainActivity : AppCompatActivity() {
             camera.startCamera()
         } else {
             requestPermissions()
-            permissionCheck()
+//            permissionCheck()
         }
     }
 }

@@ -1,12 +1,12 @@
 package com.kasahirotech.dashcamapp.screens
 
 import android.os.Bundle
-import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import com.kasahirotech.dashcamapp.service.GalleryService
 import com.kasahirotech.dashcamapp.databinding.ActivityGalleryBinding
+import com.kasahirotech.dashcamapp.service.GalleryService
+
 class Gallery : AppCompatActivity() {
     private lateinit var binding: ActivityGalleryBinding
 
