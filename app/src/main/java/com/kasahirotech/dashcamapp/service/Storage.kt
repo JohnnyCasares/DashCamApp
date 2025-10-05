@@ -1,32 +1,28 @@
 package com.kasahirotech.dashcamapp.service
 
-import android.Manifest
 import android.content.Context
-import android.content.pm.PackageManager
-import android.os.Build
-import androidx.core.content.ContextCompat
+import android.os.Environment
+import java.io.File
 
 class Storage(
     private var context: Context
 ) {
 
+    fun getPrivateRecordingsDirectory(): File? {
+        // 1. Get the base private external directory: /.../files/Movies
+        val moviesDir = context.getExternalFilesDir(Environment.DIRECTORY_MOVIES)
 
-    fun allPermissionsGranted() = REQUIRED_PERMISSIONS.all {
-        ContextCompat.checkSelfPermission(
-            context, it
-        ) == PackageManager.PERMISSION_GRANTED
+        if (moviesDir == null) return null
 
+        // 2. Append the specific subdirectory "DashCam"
+        val mediaDir = File(moviesDir, "DashCam")
+
+        if (!mediaDir.exists()) {
+            mediaDir.mkdirs() // Create the directory if it doesn't exist
+        }
+        return mediaDir
     }
 
-    companion object {
-        val REQUIRED_PERMISSIONS =
-            mutableListOf(
-                Manifest.permission.CAMERA,
-                Manifest.permission.RECORD_AUDIO
-            ).apply {
-                if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
-                    add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                }
-            }.toTypedArray()
-    }
+
+
 }

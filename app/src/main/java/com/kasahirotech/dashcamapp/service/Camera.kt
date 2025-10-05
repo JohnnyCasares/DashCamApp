@@ -31,8 +31,6 @@ class Camera
     private val activity: AppCompatActivity,
     private val binding: ActivityMainBinding,
     private val surfaceProvider: Preview.SurfaceProvider,
-
-
     ) : CameraService {
 
     private var imageCapture: ImageCapture? = null
@@ -95,7 +93,7 @@ class Camera
             put(MediaStore.MediaColumns.DISPLAY_NAME, name)
             put(MediaStore.MediaColumns.MIME_TYPE, "video/mp4")
             if (Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
-                put(MediaStore.Video.Media.RELATIVE_PATH, "Movies/CameraX-Video")
+                put(MediaStore.Video.Media.RELATIVE_PATH, "Movies/DashCam")
             }
         }
 

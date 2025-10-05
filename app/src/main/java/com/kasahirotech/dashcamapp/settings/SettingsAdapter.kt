@@ -3,7 +3,7 @@ package com.kasahirotech.dashcamapp.settings
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import com.kasahirotech.dashcamapp.databinding.SettingItemBinding
+import com.kasahirotech.dashcamapp.databinding.ItemSettingBinding
 import com.kasahirotech.dashcamapp.interfaces.SettingItem
 
 class SettingsAdapter(
@@ -12,7 +12,7 @@ class SettingsAdapter(
 
 ) : RecyclerView.Adapter<SettingsAdapter.SettingsViewHolder>() {
 
-    inner class SettingsViewHolder(private val binding: SettingItemBinding) :
+    inner class SettingsViewHolder(private val binding: ItemSettingBinding) :
         RecyclerView.ViewHolder(binding.root) {
         fun bind(setting: SettingItem) {
             binding.tvTitle.text = setting.title
@@ -29,7 +29,7 @@ class SettingsAdapter(
         parent: ViewGroup,
         viewType: Int
     ): SettingsViewHolder {
-        val binding = SettingItemBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        val binding = ItemSettingBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return SettingsViewHolder(binding)
     }
 
