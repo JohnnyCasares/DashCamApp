@@ -1,9 +1,12 @@
 package com.kasahirotech.dashcamapp.screens
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.kasahirotech.dashcamapp.databinding.ActivityGalleryBinding
 import com.kasahirotech.dashcamapp.service.GalleryService
 
@@ -22,10 +25,20 @@ class Gallery : AppCompatActivity() {
             insets
         }
 
+        val listOfVideos = videosOpener.getMyAppVideos(this)
 
-        val adapter = GalleryAdapter(videosOpener.getMyAppVideos(this)){
+        val adapter = GalleryAdapter(listOfVideos) { clickedVideo ->
+//            val intent = Intent(Intent.ACTION_VIEW).apply {
+//                // Set the data (the video's URI) and the type (video/mp4)
+//                setDataAndType(clickedVideo.uri, "video/mp4")
+//                // Grant permission for the video player app to read the file
+//                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+//            }
 
         }
+        binding.rvVideoGallery.adapter = adapter
+        binding.rvVideoGallery.layoutManager = GridLayoutManager(this, 3)
+
 
     }
 }
