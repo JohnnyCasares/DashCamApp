@@ -13,5 +13,4 @@ interface VideoItem {
     val uri: Uri
     val name: String
     val duration: Int
-
 }

@@ -1,20 +1,12 @@
 package com.kasahirotech.dashcamapp.service
 
 import android.content.Context
-
 import android.net.Uri
-
 import android.provider.MediaStore
-import com.kasahirotech.dashcamapp.interfaces.VideoItem
+import com.kasahirotech.dashcamapp.models.AppVideo
 
 
 class GalleryService {
-
-    data class AppVideo(
-        override val uri: Uri,
-        override val name: String,
-        override val duration: Int
-    ) : VideoItem
 
     fun getMyAppVideos(context: Context): List<AppVideo> {
         val videoList = mutableListOf<AppVideo>()
