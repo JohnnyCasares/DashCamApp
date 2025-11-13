@@ -17,6 +17,28 @@ class PermissionHandler(private val context: Context) {
         }
     }
 
+    fun arePermissionsGranted(permissions: Array<String>): Boolean {
+        // Check if all specified permissions are granted
+        return permissions.all {
+            ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
+        }
+    }
+
+    fun getRecordingPermissions(): Array<String> {
+        // Recording requires camera and audio permissions on all API levels
+        return arrayOf(CAMERA, RECORD_AUDIO)
+    }
+
+    fun getGalleryPermissions(): Array<String> {
+        // Gallery access requires READ_MEDIA_VIDEO on API 33+
+        // No permissions needed on API 29-32 due to Scoped Storage
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            arrayOf(READ_MEDIA_VIDEO)
+        } else {
+            emptyArray()
+        }
+    }
+
     companion object {
         // Define all possible permissions here
         const val CAMERA = Manifest.permission.CAMERA

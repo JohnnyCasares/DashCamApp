@@ -35,6 +35,7 @@ class Camera
     private var imageCapture: ImageCapture? = null
     private var videoCapture: VideoCapture<Recorder>? = null
     private var recording: Recording? = null
+    private var cameraStarted: Boolean = false
 
 
     override fun startCamera() {
@@ -65,9 +66,12 @@ class Camera
                 cameraProvider.bindToLifecycle(
                     activity, cameraSelector, preview, videoCapture
                 )
+                
+                cameraStarted = true
 
             } catch (exc: Exception) {
                 Log.e(TAG, " Failed to get camera provider or binding use cases", exc)
+                cameraStarted = false
             }
             //ContextCompat.getMainExecutor() as the second argument. This returns an Executor that runs on the main thread.
         }, ContextCompat.getMainExecutor(activity))
@@ -149,6 +153,10 @@ class Camera
 
     override fun takePhoto() {
 
+    }
+
+    override fun isCameraStarted(): Boolean {
+        return cameraStarted
     }
 
     companion object {

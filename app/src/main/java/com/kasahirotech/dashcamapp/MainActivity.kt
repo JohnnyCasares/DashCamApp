@@ -14,6 +14,16 @@ import com.kasahirotech.dashcamapp.settings.Settings
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private lateinit var camera: Camera
+    private lateinit var permissionHandler: PermissionHandler
+
+    private enum class PermissionRequestContext {
+        STARTUP,
+        RECORD,
+        GALLERY,
+        NONE
+    }
+
+    private var currentPermissionContext = PermissionRequestContext.NONE
 
     private val activityResultLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -21,20 +31,57 @@ class MainActivity : AppCompatActivity() {
         //Handle permissions granted/rejected
         var permissionGranted = true
         permissions.entries.forEach {
-            if (it.key in PermissionHandler.REQUIRED_PERMISSIONS && it.value == false)
+            if (it.value == false)
                 permissionGranted = false
         }
-        if (!permissionGranted) {
-            Toast.makeText(this, "Permission request denied", Toast.LENGTH_SHORT)
+        
+        if (permissionGranted) {
+            // Handle context-specific actions when permissions are granted
+            when (currentPermissionContext) {
+                PermissionRequestContext.RECORD -> {
+                    // Initialize camera if not already started, then start recording
+                    if (!camera.isCameraStarted()) {
+                        camera.startCamera()
+                    }
+                    camera.captureVideo()
+                }
+                PermissionRequestContext.GALLERY -> {
+                    // Open Gallery activity
+                    Intent(this, Gallery::class.java).also {
+                        this.startActivity(it)
+                    }
+                }
+                PermissionRequestContext.STARTUP -> {
+                    // Initialize camera for startup
+                    camera.startCamera()
+                }
+                PermissionRequestContext.NONE -> {
+                    // No specific action needed
+                }
+            }
         } else {
-            Toast.makeText(this, "Permission request allowed", Toast.LENGTH_SHORT)
-            //startCamera()
+            // Show context-specific error messages when permissions are denied
+            val errorMessage = when (currentPermissionContext) {
+                PermissionRequestContext.RECORD -> 
+                    "Camera and microphone permissions are required to record videos"
+                PermissionRequestContext.GALLERY -> 
+                    "Media access permission is required to view videos"
+                PermissionRequestContext.STARTUP -> 
+                    "Permission request denied"
+                PermissionRequestContext.NONE -> 
+                    "Permission request denied"
+            }
+            Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show()
         }
+        
+        // Reset context to NONE after handling
+        currentPermissionContext = PermissionRequestContext.NONE
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
+        permissionHandler = PermissionHandler(this)
         camera = Camera(
             activity = this,
             binding = binding,
@@ -46,14 +93,16 @@ class MainActivity : AppCompatActivity() {
 
 
         binding.imgBtnGallery.setOnClickListener {
-
-//                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-//                    ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_VIDEO)
-//                }
-
-
-            Intent(this, Gallery::class.java).also {
-                this.startActivity(it)
+            val galleryPermissions = permissionHandler.getGalleryPermissions()
+            if (galleryPermissions.isEmpty() || permissionHandler.arePermissionsGranted(galleryPermissions)) {
+                // No permissions needed (API 29-32) or permissions are granted, open Gallery
+                Intent(this, Gallery::class.java).also {
+                    this.startActivity(it)
+                }
+            } else {
+                // Permissions not granted (API 33+), request them
+                currentPermissionContext = PermissionRequestContext.GALLERY
+                activityResultLauncher.launch(galleryPermissions)
             }
         }
 
@@ -64,7 +113,15 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.btnRecordAndStop.setOnClickListener {
-            camera.captureVideo()
+            val recordingPermissions = permissionHandler.getRecordingPermissions()
+            if (permissionHandler.arePermissionsGranted(recordingPermissions)) {
+                // Permissions are granted, proceed with recording
+                camera.captureVideo()
+            } else {
+                // Permissions not granted, request them
+                currentPermissionContext = PermissionRequestContext.RECORD
+                activityResultLauncher.launch(recordingPermissions)
+            }
         }
     }
 
@@ -74,10 +131,11 @@ class MainActivity : AppCompatActivity() {
 
     private fun permissionCheck() {
         //Request camera permissions
-        if (PermissionHandler(this).allPermissionsGranted()) {
+        if (permissionHandler.allPermissionsGranted()) {
             //Toast.makeText(baseContext, "Permission request allowed", Toast.LENGTH_SHORT)
             camera.startCamera()
         } else {
+            currentPermissionContext = PermissionRequestContext.STARTUP
             requestPermissions()
 //            permissionCheck()
         }
