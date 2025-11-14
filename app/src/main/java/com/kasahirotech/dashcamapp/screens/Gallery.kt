@@ -42,6 +42,8 @@ class Gallery : AppCompatActivity() {
         binding.rvVideoGallery.adapter = adapter
         binding.rvVideoGallery.layoutManager = GridLayoutManager(this, 3)
 
-
+        binding.fabBack.setOnClickListener {
+            finish()
+        }
     }
 }

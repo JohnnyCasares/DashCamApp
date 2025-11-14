@@ -4,6 +4,8 @@ import android.Manifest
 import android.content.ContentValues
 import android.provider.MediaStore
 import android.util.Log
+import android.view.animation.Animation
+import android.view.animation.AnimationUtils
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.CameraSelector
@@ -118,10 +120,15 @@ class Camera
             .start(ContextCompat.getMainExecutor(activity)) { recordEvent ->
                 when (recordEvent) {
                     is VideoRecordEvent.Start -> {
-                        binding.btnRecordAndStop.apply {
-                            text = activity.getString(R.string.stop_capture)
-                            isEnabled = true
-                        }
+                        val animation = AnimationUtils.loadAnimation(activity, R.anim.circle_to_square)
+                        animation.setAnimationListener(object : Animation.AnimationListener {
+                            override fun onAnimationStart(animation: Animation?) { /* Not used */ }
+                            override fun onAnimationEnd(animation: Animation?) {
+                                binding.btnRecordAndStop.setBackgroundResource(R.drawable.ic_stop_recording)
+                            }
+                            override fun onAnimationRepeat(animation: Animation?) { /* Not used */ }
+                        })
+                        binding.btnRecordAndStop.startAnimation(animation)
                     }
 
                     is VideoRecordEvent.Finalize -> {
@@ -140,10 +147,15 @@ class Camera
                                         "${recordEvent.error}"
                             )
                         }
-                        binding.btnRecordAndStop.apply {
-                            text = activity.getString(R.string.start_capture)
-                            isEnabled = true
-                        }
+                        val animation = AnimationUtils.loadAnimation(activity, R.anim.square_to_circle)
+                        animation.setAnimationListener(object : Animation.AnimationListener {
+                            override fun onAnimationStart(animation: Animation?) { /* Not used */ }
+                            override fun onAnimationEnd(animation: Animation?) {
+                                binding.btnRecordAndStop.setBackgroundResource(R.drawable.bg_record_button)
+                            }
+                            override fun onAnimationRepeat(animation: Animation?) { /* Not used */ }
+                        })
+                        binding.btnRecordAndStop.startAnimation(animation)
                     }
                 }
             }

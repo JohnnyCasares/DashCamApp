@@ -1,7 +1,28 @@
 <resources>
     <!-- Base application theme. -->
-    <style name="Base.Theme.DashCamApp" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your dark theme here. -->
-        <!-- <item name="colorPrimary">@color/my_dark_primary</item> -->
+    <style name="Theme.DashCamApp" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="colorPrimary">@color/md_theme_primary</item>
+        <item name="colorOnPrimary">@color/md_theme_onPrimary</item>
+        <item name="colorSecondary">@color/md_theme_secondary</item>
+        <item name="colorOnSecondary">@color/md_theme_onSecondary</item>
+        <item name="android:colorBackground">@color/md_theme_background</item>
+        <item name="colorOnBackground">@color/md_theme_onBackground</item>
+        <item name="colorSurface">@color/md_theme_surface</item>
+        <item name="colorOnSurface">@color/md_theme_onSurface</item>
+        <item name="colorSurfaceVariant">@color/md_theme_surfaceVariant</item>
+        <item name="colorOnSurfaceVariant">@color/md_theme_onSurfaceVariant</item>
+        <item name="colorOutline">@color/md_theme_outline</item>
+
+        <!-- Fix for FloatingActionButton -->
+        <item name="colorSecondaryContainer">@color/md_theme_primary</item>
+        <item name="colorOnSecondaryContainer">@color/md_theme_onPrimary</item>
+
+        <!-- Style for ImageButtons -->
+        <item name="imageButtonStyle">@style/Widget.App.ImageButton</item>
+    </style>
+
+    <style name="Widget.App.ImageButton" parent="Widget.AppCompat.ImageButton">
+        <item name="android:background">@color/md_theme_surface</item>
+        <item name="android:tint">@color/md_theme_onSurface</item>
     </style>
 </resources>
