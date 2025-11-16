@@ -6,6 +6,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.kasahirotech.dashcamapp.databinding.ItemSettingBinding
 import com.kasahirotech.dashcamapp.databinding.ItemSettingToggleBinding
 import com.kasahirotech.dashcamapp.interfaces.SettingItem
+import com.kasahirotech.dashcamapp.settings.items.AudioToggleSetting
+import com.kasahirotech.dashcamapp.settings.items.DualCameraToggleSetting
 
 class SettingsAdapter(
     private var settings: List<SettingItem>,
@@ -35,10 +37,32 @@ class SettingsAdapter(
             binding.tvTitle.text = setting.title
             binding.ivIcon.setImageResource(setting.icon)
             
-            if (setting is AudioToggleSetting) {
-                binding.switchToggle.isChecked = setting.isEnabled
-                binding.switchToggle.setOnCheckedChangeListener { _, isChecked ->
-                    setting.toggle()
+            when (setting) {
+                is AudioToggleSetting -> {
+                    binding.switchToggle.isChecked = setting.isEnabled
+                    binding.switchToggle.isEnabled = true
+                    binding.root.alpha = 1.0f
+                    binding.switchToggle.setOnCheckedChangeListener { _, _ ->
+                        setting.toggle()
+                    }
+                }
+                is DualCameraToggleSetting -> {
+                    binding.switchToggle.isChecked = setting.isEnabled
+                    binding.switchToggle.isEnabled = setting.isDeviceCapable
+                    
+                    if (!setting.isDeviceCapable) {
+                        binding.root.alpha = 0.5f
+                        // Note: Subtitle text would require layout modification
+                        // For now, the disabled state with reduced alpha indicates unavailability
+                    } else {
+                        binding.root.alpha = 1.0f
+                    }
+                    
+                    binding.switchToggle.setOnCheckedChangeListener { _, _ ->
+                        if (setting.isDeviceCapable) {
+                            setting.toggle()
+                        }
+                    }
                 }
             }
         }
@@ -47,6 +71,7 @@ class SettingsAdapter(
     override fun getItemViewType(position: Int): Int {
         return when (settings[position]) {
             is AudioToggleSetting -> VIEW_TYPE_TOGGLE
+            is DualCameraToggleSetting -> VIEW_TYPE_TOGGLE
             else -> VIEW_TYPE_CLICK
         }
     }

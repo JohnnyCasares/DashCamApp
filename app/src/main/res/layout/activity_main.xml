@@ -19,11 +19,53 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
+        <!-- Single camera preview (visible by default) -->
         <androidx.camera.view.PreviewView
             android:id="@+id/viewFinder"
-            android.layout_height="match_parent"
             android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+            android:layout_height="match_parent"
+            android:visibility="visible" />
+
+        <!-- Dual camera preview container (hidden by default) -->
+        <LinearLayout
+            android:id="@+id/dualPreviewContainer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Back Camera"
+                android:gravity="center"
+                android:background="@color/md_theme_surfaceVariant"/>
+
+            <androidx.camera.view.PreviewView
+                android:id="@+id/viewFinderBack"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="2dp"
+                android:background="?android:attr/listDivider" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Front Camera"
+                android:gravity="center"
+                android:background="@color/md_theme_surfaceVariant"/>
+
+            <androidx.camera.view.PreviewView
+                android:id="@+id/viewFinderFront"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+
+        </LinearLayout>
 
     </com.google.android.material.card.MaterialCardView>
 

@@ -7,6 +7,8 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.kasahirotech.dashcamapp.databinding.ActivitySettingsBinding
 import com.kasahirotech.dashcamapp.interfaces.SettingItem
+import com.kasahirotech.dashcamapp.settings.items.AudioToggleSetting
+import com.kasahirotech.dashcamapp.settings.items.DualCameraToggleSetting
 
 class Settings : AppCompatActivity() {
 
@@ -24,9 +26,11 @@ class Settings : AppCompatActivity() {
             insets
         }
         val audioToggle = AudioToggleSetting(this)
+        val dualCameraToggle = DualCameraToggleSetting(this)
 
         var settingsList = mutableListOf<SettingItem>(
-            audioToggle
+            audioToggle,
+            dualCameraToggle
         )
 
         val adapter = SettingsAdapter(settingsList){

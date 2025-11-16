@@ -1,4 +1,4 @@
-package com.kasahirotech.dashcamapp.settings
+package com.kasahirotech.dashcamapp.settings.items
 
 import android.content.Context
 import androidx.fragment.app.FragmentManager

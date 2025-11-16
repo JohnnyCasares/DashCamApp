@@ -12,6 +12,8 @@ object PreferenceManager {
     private const val PREFS_NAME = "dashcam_preferences"
     private const val KEY_AUDIO_ENABLED = "audio_recording_enabled"
     private const val DEFAULT_AUDIO_ENABLED = true
+    private const val KEY_DUAL_CAMERA_ENABLED = "dual_camera_enabled"
+    private const val DEFAULT_DUAL_CAMERA_ENABLED = false
     private const val TAG = "PreferenceManager"
     
     /**
@@ -42,6 +44,37 @@ object PreferenceManager {
             prefs.edit().putBoolean(KEY_AUDIO_ENABLED, enabled).apply()
         } catch (e: Exception) {
             Log.e(TAG, "Error writing audio preference", e)
+        }
+    }
+    
+    /**
+     * Checks if dual camera recording is enabled in user preferences.
+     * 
+     * @param context Application or Activity context
+     * @return true if dual camera recording is enabled, false otherwise. Defaults to false on first launch.
+     */
+    fun isDualCameraEnabled(context: Context): Boolean {
+        return try {
+            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            prefs.getBoolean(KEY_DUAL_CAMERA_ENABLED, DEFAULT_DUAL_CAMERA_ENABLED)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error reading dual camera preference", e)
+            DEFAULT_DUAL_CAMERA_ENABLED
+        }
+    }
+    
+    /**
+     * Sets the dual camera recording preference.
+     * 
+     * @param context Application or Activity context
+     * @param enabled true to enable dual camera recording, false to disable
+     */
+    fun setDualCameraEnabled(context: Context, enabled: Boolean) {
+        try {
+            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            prefs.edit().putBoolean(KEY_DUAL_CAMERA_ENABLED, enabled).apply()
+        } catch (e: Exception) {
+            Log.e(TAG, "Error writing dual camera preference", e)
         }
     }
 }
