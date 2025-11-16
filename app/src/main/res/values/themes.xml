@@ -22,7 +22,7 @@
     </style>
 
     <style name="Widget.App.ImageButton" parent="Widget.AppCompat.ImageButton">
-        <item name="android:background">@color/md_theme_surface</item>
+        <item name="android:background">@drawable/bg_round_image_button</item>
         <item name="android:tint">@color/md_theme_onSurface</item>
     </style>
 </resources>

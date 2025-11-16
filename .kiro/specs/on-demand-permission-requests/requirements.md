@@ -47,10 +47,10 @@ This feature improves the permission handling mechanism in DashCamApp to request
 
 #### Acceptance Criteria
 
-1. THE PermissionHandler SHALL provide a method to check if specific permissions are granted
-2. THE PermissionHandler SHALL provide a method to get the recording permissions (CAMERA and RECORD_AUDIO)
-3. THE PermissionHandler SHALL provide a method to get the gallery permissions (READ_MEDIA_VIDEO on API 33+, empty array on API 29-32)
-4. THE PermissionHandler SHALL maintain backward compatibility with the existing allPermissionsGranted method
+1. THE Permission Handler SHALL provide a method to check if specific permissions are granted
+2. THE Permission Handler SHALL provide a method to retrieve the recording permissions (Camera Permission and Audio Permission)
+3. THE Permission Handler SHALL provide a method to retrieve the gallery permissions (Media Permission on API 33 and above, empty array on API 29 through 32)
+4. THE Permission Handler SHALL maintain backward compatibility with the existing allPermissionsGranted method
 
 ### Requirement 4
 
@@ -58,6 +58,6 @@ This feature improves the permission handling mechanism in DashCamApp to request
 
 #### Acceptance Criteria
 
-1. WHEN the user grants camera and audio permissions through the Record button flow, THE DashCamApp SHALL initialize the camera preview
+1. WHEN the user grants Camera Permission and Audio Permission through the Record Button flow, THE DashCamApp SHALL initialize the camera preview
 2. WHEN the user grants permissions at app startup, THE DashCamApp SHALL initialize the camera preview
-3. THE DashCamApp SHALL handle camera initialization only after all required camera permissions are granted
+3. THE DashCamApp SHALL initialize the camera only after Camera Permission and Audio Permission are granted

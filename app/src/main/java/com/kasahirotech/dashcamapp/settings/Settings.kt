@@ -23,11 +23,10 @@ class Settings : AppCompatActivity() {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
-        val settingOne = SettingOneTest()
-        val settingTwo = SettingTwoTest()
+        val audioToggle = AudioToggleSetting(this)
 
         var settingsList = mutableListOf<SettingItem>(
-            settingOne, settingTwo
+            audioToggle
         )
 
         val adapter = SettingsAdapter(settingsList){
@@ -37,12 +36,8 @@ class Settings : AppCompatActivity() {
         binding.rvSettings.adapter = adapter
         binding.rvSettings.layoutManager = LinearLayoutManager(this)
 
-
-
-
-
+        binding.fabBack.setOnClickListener {
+            finish()
+        }
     }
 }
-
-
-

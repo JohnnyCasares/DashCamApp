@@ -1,4 +1,4 @@
-/# Implementation Plan
+# Implementation Plan
 
 - [x] 1. Enhance PermissionHandler with feature-specific permission methods
 

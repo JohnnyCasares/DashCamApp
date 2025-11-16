@@ -112,7 +112,8 @@ class Camera
                         activity,
                         Manifest.permission.RECORD_AUDIO
                     ) ==
-                    PermissionChecker.PERMISSION_GRANTED
+                    PermissionChecker.PERMISSION_GRANTED &&
+                    PreferenceManager.isAudioRecordingEnabled(activity)
                 ) {
                     withAudioEnabled()
                 }
