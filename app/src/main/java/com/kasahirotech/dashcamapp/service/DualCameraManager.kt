@@ -114,13 +114,15 @@ class DualCameraManager(
             }
             
             // Create video capture use cases with recorders
+            val selectedQuality = PreferenceManager.getVideoQuality(activity)
+            
             val frontRecorder = Recorder.Builder()
-                .setQualitySelector(QualitySelector.from(Quality.HIGHEST))
+                .setQualitySelector(QualitySelector.from(selectedQuality))
                 .build()
             frontVideoCapture = VideoCapture.withOutput(frontRecorder)
             
             val backRecorder = Recorder.Builder()
-                .setQualitySelector(QualitySelector.from(Quality.HIGHEST))
+                .setQualitySelector(QualitySelector.from(selectedQuality))
                 .build()
             backVideoCapture = VideoCapture.withOutput(backRecorder)
             

@@ -8,6 +8,7 @@ import com.kasahirotech.dashcamapp.databinding.ItemSettingToggleBinding
 import com.kasahirotech.dashcamapp.interfaces.SettingItem
 import com.kasahirotech.dashcamapp.settings.items.AudioToggleSetting
 import com.kasahirotech.dashcamapp.settings.items.DualCameraToggleSetting
+import com.kasahirotech.dashcamapp.settings.items.VideoQualitySetting
 
 class SettingsAdapter(
     private var settings: List<SettingItem>,
@@ -25,6 +26,15 @@ class SettingsAdapter(
         fun bind(setting: SettingItem) {
             binding.tvTitle.text = setting.title
             binding.ivIcon.setImageResource(setting.icon)
+            
+            // Handle subtitle for VideoQualitySetting
+            if (setting is VideoQualitySetting) {
+                binding.tvSubtitle.text = setting.getCurrentQualityText()
+                binding.tvSubtitle.visibility = android.view.View.VISIBLE
+            } else {
+                binding.tvSubtitle.visibility = android.view.View.GONE
+            }
+            
             binding.root.setOnClickListener {
                 onItemClicked(setting)
             }
@@ -72,6 +82,7 @@ class SettingsAdapter(
         return when (settings[position]) {
             is AudioToggleSetting -> VIEW_TYPE_TOGGLE
             is DualCameraToggleSetting -> VIEW_TYPE_TOGGLE
+            is VideoQualitySetting -> VIEW_TYPE_CLICK
             else -> VIEW_TYPE_CLICK
         }
     }

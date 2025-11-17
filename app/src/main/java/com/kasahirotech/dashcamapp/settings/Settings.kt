@@ -9,6 +9,7 @@ import com.kasahirotech.dashcamapp.databinding.ActivitySettingsBinding
 import com.kasahirotech.dashcamapp.interfaces.SettingItem
 import com.kasahirotech.dashcamapp.settings.items.AudioToggleSetting
 import com.kasahirotech.dashcamapp.settings.items.DualCameraToggleSetting
+import com.kasahirotech.dashcamapp.settings.items.VideoQualitySetting
 
 class Settings : AppCompatActivity() {
 
@@ -25,16 +26,23 @@ class Settings : AppCompatActivity() {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
+        lateinit var adapter: SettingsAdapter
+        
         val audioToggle = AudioToggleSetting(this)
         val dualCameraToggle = DualCameraToggleSetting(this)
+        val videoQualitySetting = VideoQualitySetting(this) {
+            // Callback when quality changes - refresh the adapter
+            adapter.notifyDataSetChanged()
+        }
 
         var settingsList = mutableListOf<SettingItem>(
             audioToggle,
-            dualCameraToggle
+            dualCameraToggle,
+            videoQualitySetting
         )
 
-        val adapter = SettingsAdapter(settingsList){
-            clickedSettingItem ->  clickedSettingItem.onItemClick(this, null)
+        adapter = SettingsAdapter(settingsList){ clickedSettingItem ->
+            clickedSettingItem.onItemClick(this, null)
         }
 
         binding.rvSettings.adapter = adapter

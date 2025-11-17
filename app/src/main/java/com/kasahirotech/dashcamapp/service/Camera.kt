@@ -57,8 +57,9 @@ class Camera
             }
             imageCapture = ImageCapture.Builder().build()
 
+            val selectedQuality = PreferenceManager.getVideoQuality(activity)
             val recorder =
-                Recorder.Builder().setQualitySelector(QualitySelector.from(Quality.HIGHEST)).build()
+                Recorder.Builder().setQualitySelector(QualitySelector.from(selectedQuality)).build()
             videoCapture = VideoCapture.withOutput(recorder)
 
             //Select back camera as a default

@@ -26,6 +26,15 @@ class Gallery : AppCompatActivity() {
 
         val listOfVideos = videosOpener.getMyAppVideos(this)
 
+        // Show empty state if no videos, otherwise show the gallery
+        if (listOfVideos.isEmpty()) {
+            binding.tvEmptyState.visibility = android.view.View.VISIBLE
+            binding.rvVideoGallery.visibility = android.view.View.GONE
+        } else {
+            binding.tvEmptyState.visibility = android.view.View.GONE
+            binding.rvVideoGallery.visibility = android.view.View.VISIBLE
+        }
+
         val adapter = GalleryAdapter(listOfVideos) { clickedVideo ->
 
             // Create an Intent to view the video
