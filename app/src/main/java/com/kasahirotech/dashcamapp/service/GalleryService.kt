@@ -3,12 +3,13 @@ package com.kasahirotech.dashcamapp.service
 import android.content.Context
 import android.net.Uri
 import android.provider.MediaStore
+import com.kasahirotech.dashcamapp.interfaces.GalleryDataService
 import com.kasahirotech.dashcamapp.models.AppVideo
 
 
-class GalleryService {
+class GalleryService : GalleryDataService {
 
-    fun getMyAppVideos(context: Context): List<AppVideo> {
+    override fun getMyAppVideos(context: Context): List<AppVideo> {
         val videoList = mutableListOf<AppVideo>()
 
         // The columns we want to retrieve

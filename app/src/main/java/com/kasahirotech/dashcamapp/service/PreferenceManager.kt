@@ -3,12 +3,13 @@ package com.kasahirotech.dashcamapp.service
 import android.content.Context
 import android.util.Log
 import androidx.camera.video.Quality
+import com.kasahirotech.dashcamapp.interfaces.PreferenceService
 
 /**
  * Utility object for managing application preferences using SharedPreferences.
  * Centralizes preference operations for audio recording and other app settings.
  */
-object PreferenceManager {
+object PreferenceManager : PreferenceService {
     
     private const val PREFS_NAME = "dashcam_preferences"
     private const val KEY_AUDIO_ENABLED = "audio_recording_enabled"
@@ -21,6 +22,8 @@ object PreferenceManager {
     private const val DEFAULT_SPEED_DISPLAY_ENABLED = false
     private const val KEY_SPEED_UNIT = "speed_unit"
     private const val DEFAULT_SPEED_UNIT = "mph"
+    private const val KEY_TRIP_LOG_ENABLED = "trip_log_enabled"
+    private const val DEFAULT_TRIP_LOG_ENABLED = false
     private const val TAG = "PreferenceManager"
     
     /**
@@ -29,7 +32,7 @@ object PreferenceManager {
      * @param context Application or Activity context
      * @return true if audio recording is enabled, false otherwise. Defaults to true on first launch.
      */
-    fun isAudioRecordingEnabled(context: Context): Boolean {
+    override fun isAudioRecordingEnabled(context: Context): Boolean {
         return try {
             val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             prefs.getBoolean(KEY_AUDIO_ENABLED, DEFAULT_AUDIO_ENABLED)
@@ -45,7 +48,7 @@ object PreferenceManager {
      * @param context Application or Activity context
      * @param enabled true to enable audio recording, false to disable
      */
-    fun setAudioRecordingEnabled(context: Context, enabled: Boolean) {
+    override fun setAudioRecordingEnabled(context: Context, enabled: Boolean) {
         try {
             val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             prefs.edit().putBoolean(KEY_AUDIO_ENABLED, enabled).apply()
@@ -60,7 +63,7 @@ object PreferenceManager {
      * @param context Application or Activity context
      * @return true if dual camera recording is enabled, false otherwise. Defaults to false on first launch.
      */
-    fun isDualCameraEnabled(context: Context): Boolean {
+    override fun isDualCameraEnabled(context: Context): Boolean {
         return try {
             val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             prefs.getBoolean(KEY_DUAL_CAMERA_ENABLED, DEFAULT_DUAL_CAMERA_ENABLED)
@@ -76,7 +79,7 @@ object PreferenceManager {
      * @param context Application or Activity context
      * @param enabled true to enable dual camera recording, false to disable
      */
-    fun setDualCameraEnabled(context: Context, enabled: Boolean) {
+    override fun setDualCameraEnabled(context: Context, enabled: Boolean) {
         try {
             val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             prefs.edit().putBoolean(KEY_DUAL_CAMERA_ENABLED, enabled).apply()
@@ -91,7 +94,7 @@ object PreferenceManager {
      * @param context Application or Activity context
      * @return Quality enum value. Defaults to HIGHEST on first launch or if stored value is invalid.
      */
-    fun getVideoQuality(context: Context): Quality {
+    override fun getVideoQuality(context: Context): Quality {
         return try {
             val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             val qualityString = prefs.getString(KEY_VIDEO_QUALITY, DEFAULT_VIDEO_QUALITY) ?: DEFAULT_VIDEO_QUALITY
@@ -121,7 +124,7 @@ object PreferenceManager {
      * @param context Application or Activity context
      * @param quality Quality enum value to store
      */
-    fun setVideoQuality(context: Context, quality: Quality) {
+    override fun setVideoQuality(context: Context, quality: Quality) {
         try {
             val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             val qualityString = when (quality) {
@@ -145,7 +148,7 @@ object PreferenceManager {
      * @param context Application or Activity context
      * @return true if speed display is enabled, false otherwise. Defaults to false on first launch.
      */
-    fun isSpeedDisplayEnabled(context: Context): Boolean {
+    override fun isSpeedDisplayEnabled(context: Context): Boolean {
         return try {
             val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             prefs.getBoolean(KEY_SPEED_DISPLAY_ENABLED, DEFAULT_SPEED_DISPLAY_ENABLED)
@@ -161,7 +164,7 @@ object PreferenceManager {
      * @param context Application or Activity context
      * @param enabled true to enable speed display, false to disable
      */
-    fun setSpeedDisplayEnabled(context: Context, enabled: Boolean) {
+    override fun setSpeedDisplayEnabled(context: Context, enabled: Boolean) {
         try {
             val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             prefs.edit().putBoolean(KEY_SPEED_DISPLAY_ENABLED, enabled).apply()
@@ -176,7 +179,7 @@ object PreferenceManager {
      * @param context Application or Activity context
      * @return Speed unit string ("mph" or "kmh"). Defaults to "mph" on first launch.
      */
-    fun getSpeedUnit(context: Context): String {
+    override fun getSpeedUnit(context: Context): String {
         return try {
             val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             prefs.getString(KEY_SPEED_UNIT, DEFAULT_SPEED_UNIT) ?: DEFAULT_SPEED_UNIT
@@ -192,12 +195,43 @@ object PreferenceManager {
      * @param context Application or Activity context
      * @param unit Speed unit string ("mph" or "kmh")
      */
-    fun setSpeedUnit(context: Context, unit: String) {
+    override fun setSpeedUnit(context: Context, unit: String) {
         try {
             val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             prefs.edit().putString(KEY_SPEED_UNIT, unit).apply()
         } catch (e: Exception) {
             Log.e(TAG, "Error writing speed unit preference", e)
+        }
+    }
+    
+    /**
+     * Checks if trip logging is enabled in user preferences.
+     * 
+     * @param context Application or Activity context
+     * @return true if trip logging is enabled, false otherwise. Defaults to false on first launch.
+     */
+    override fun isTripLogEnabled(context: Context): Boolean {
+        return try {
+            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            prefs.getBoolean(KEY_TRIP_LOG_ENABLED, DEFAULT_TRIP_LOG_ENABLED)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error reading trip log preference", e)
+            DEFAULT_TRIP_LOG_ENABLED
+        }
+    }
+    
+    /**
+     * Sets the trip logging preference.
+     * 
+     * @param context Application or Activity context
+     * @param enabled true to enable trip logging, false to disable
+     */
+    override fun setTripLogEnabled(context: Context, enabled: Boolean) {
+        try {
+            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            prefs.edit().putBoolean(KEY_TRIP_LOG_ENABLED, enabled).apply()
+        } catch (e: Exception) {
+            Log.e(TAG, "Error writing trip log preference", e)
         }
     }
 }

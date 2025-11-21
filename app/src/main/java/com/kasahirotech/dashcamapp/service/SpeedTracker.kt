@@ -9,6 +9,7 @@ import android.location.LocationManager
 import android.os.Bundle
 import android.util.Log
 import androidx.core.content.ContextCompat
+import com.kasahirotech.dashcamapp.interfaces.SpeedTrackingService
 
 /**
  * Service for tracking vehicle speed using GPS location data.
@@ -16,19 +17,14 @@ import androidx.core.content.ContextCompat
  */
 class SpeedTracker(
     private val context: Context,
-    private val onSpeedUpdate: (speed: Float, unit: SpeedUnit) -> Unit
-) {
-    
-    enum class SpeedUnit {
-        MPH,
-        KMH
-    }
+    private val onSpeedUpdate: (speed: Float, unit: SpeedTrackingService.SpeedUnit) -> Unit
+) : SpeedTrackingService {
     
     private val locationManager: LocationManager = 
         context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
     
     private var isTracking: Boolean = false
-    private var currentUnit: SpeedUnit = SpeedUnit.MPH
+    private var currentUnit: SpeedTrackingService.SpeedUnit = SpeedTrackingService.SpeedUnit.MPH
     
     // For smoothing speed readings
     private val speedHistory = mutableListOf<Float>()
@@ -71,6 +67,7 @@ class SpeedTracker(
             }
         }
         
+        @Deprecated("Deprecated in API 29")
         override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {
             // Deprecated but required for API compatibility
         }
@@ -89,7 +86,7 @@ class SpeedTracker(
      * Starts tracking speed using GPS location updates.
      * Requires ACCESS_FINE_LOCATION permission.
      */
-    fun startTracking() {
+    override fun startTracking() {
         if (!hasLocationPermission()) {
             Log.e(TAG, "Cannot start tracking: location permission not granted")
             return
@@ -119,7 +116,7 @@ class SpeedTracker(
     /**
      * Stops tracking speed and unregisters location listener.
      */
-    fun stopTracking() {
+    override fun stopTracking() {
         if (!isTracking) {
             return
         }
@@ -140,7 +137,7 @@ class SpeedTracker(
      * 
      * @return true if ACCESS_FINE_LOCATION permission is granted
      */
-    fun hasLocationPermission(): Boolean {
+    override fun hasLocationPermission(): Boolean {
         return ContextCompat.checkSelfPermission(
             context,
             Manifest.permission.ACCESS_FINE_LOCATION
@@ -152,7 +149,7 @@ class SpeedTracker(
      * 
      * @param unit The desired speed unit (MPH or KMH)
      */
-    fun setSpeedUnit(unit: SpeedUnit) {
+    override fun setSpeedUnit(unit: SpeedTrackingService.SpeedUnit) {
         currentUnit = unit
     }
     
@@ -163,10 +160,10 @@ class SpeedTracker(
      * @param unit Target unit for conversion
      * @return Speed in the specified unit
      */
-    private fun convertSpeed(metersPerSecond: Float, unit: SpeedUnit): Float {
+    private fun convertSpeed(metersPerSecond: Float, unit: SpeedTrackingService.SpeedUnit): Float {
         return when (unit) {
-            SpeedUnit.MPH -> metersPerSecond * MPS_TO_MPH
-            SpeedUnit.KMH -> metersPerSecond * MPS_TO_KMH
+            SpeedTrackingService.SpeedUnit.MPH -> metersPerSecond * MPS_TO_MPH
+            SpeedTrackingService.SpeedUnit.KMH -> metersPerSecond * MPS_TO_KMH
         }
     }
     

@@ -8,11 +8,14 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.kasahirotech.dashcamapp.databinding.ActivityMainBinding
 import com.kasahirotech.dashcamapp.screens.Gallery
+import com.kasahirotech.dashcamapp.interfaces.SpeedTrackingService
 import com.kasahirotech.dashcamapp.service.Camera
 import com.kasahirotech.dashcamapp.service.DualCameraManager
 import com.kasahirotech.dashcamapp.service.PermissionHandler
 import com.kasahirotech.dashcamapp.service.PreferenceManager
 import com.kasahirotech.dashcamapp.service.SpeedTracker
+import com.kasahirotech.dashcamapp.service.Storage
+import com.kasahirotech.dashcamapp.service.TripLogger
 import com.kasahirotech.dashcamapp.settings.Settings
 
 class MainActivity : AppCompatActivity() {
@@ -20,7 +23,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var camera: Camera
     private lateinit var dualCameraManager: DualCameraManager
     private lateinit var permissionHandler: PermissionHandler
-    private var speedTracker: SpeedTracker? = null
+    private var speedTracker: SpeedTrackingService? = null
+    private lateinit var tripLogger: TripLogger
 
     private var isDualCameraMode = false
 
@@ -93,6 +97,8 @@ class MainActivity : AppCompatActivity() {
             frontPreviewView = binding.viewFinderFront,
             backPreviewView = binding.viewFinderBack
         )
+        val storage = Storage(this)
+        tripLogger = TripLogger(this, storage)
         setContentView(binding.root)
 
         initializeSpeedDisplay()
@@ -188,7 +194,7 @@ class MainActivity : AppCompatActivity() {
         if (PreferenceManager.isSpeedDisplayEnabled(this)) {
             if (permissionHandler.hasLocationPermission()) {
                 val unitString = PreferenceManager.getSpeedUnit(this)
-                val unit = if (unitString == "kmh") SpeedTracker.SpeedUnit.KMH else SpeedTracker.SpeedUnit.MPH
+                val unit = if (unitString == "kmh") SpeedTrackingService.SpeedUnit.KMH else SpeedTrackingService.SpeedUnit.MPH
                 speedTracker?.setSpeedUnit(unit)
                 speedTracker?.startTracking()
                 binding.tvSpeed.visibility = View.VISIBLE
@@ -219,13 +225,49 @@ class MainActivity : AppCompatActivity() {
         }
     }
     
-    private fun updateSpeedDisplay(speed: Float, unit: SpeedTracker.SpeedUnit) {
-        val unitLabel = if (unit == SpeedTracker.SpeedUnit.MPH) "mph" else "km/h"
+    private fun updateSpeedDisplay(speed: Float, unit: SpeedTrackingService.SpeedUnit) {
+        val unitLabel = if (unit == SpeedTrackingService.SpeedUnit.MPH) "mph" else "km/h"
         
         if (speed < 0) {
             binding.tvSpeed.text = "-- $unitLabel"
         } else {
             binding.tvSpeed.text = "${speed.toInt()} $unitLabel"
         }
+    }
+    
+    /**
+     * Starts trip logging if the feature is enabled in preferences.
+     * Called when video recording starts.
+     */
+    fun startTripLoggingIfEnabled() {
+        val isTripLogEnabled = PreferenceManager.isTripLogEnabled(this)
+        val hasLocationPerm = permissionHandler.hasLocationPermission()
+        
+        android.util.Log.d("MainActivity", "Trip log enabled: $isTripLogEnabled, Location permission: $hasLocationPerm")
+        
+        if (isTripLogEnabled) {
+            if (hasLocationPerm) {
+                val success = tripLogger.startLogging(this)
+                android.util.Log.d("MainActivity", "Trip logging start result: $success")
+                if (!success) {
+                    Toast.makeText(this, "Unable to start trip logging", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(this, "Trip logging started", Toast.LENGTH_SHORT).show()
+                }
+            } else {
+                android.util.Log.w("MainActivity", "Trip logging not started: missing location permission")
+                Toast.makeText(this, "Trip logging requires location permission", Toast.LENGTH_SHORT).show()
+            }
+        } else {
+            android.util.Log.d("MainActivity", "Trip logging not started: feature disabled in settings")
+        }
+    }
+    
+    /**
+     * Stops trip logging.
+     * Called when video recording stops.
+     */
+    fun stopTripLogging() {
+        tripLogger.stopLogging()
     }
 }

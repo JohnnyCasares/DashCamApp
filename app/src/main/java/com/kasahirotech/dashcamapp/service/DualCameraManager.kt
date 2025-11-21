@@ -21,6 +21,7 @@ import androidx.camera.video.VideoCapture
 import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
 import androidx.core.content.PermissionChecker
+import com.kasahirotech.dashcamapp.MainActivity
 import java.text.SimpleDateFormat
 import java.util.Locale
 
@@ -258,6 +259,12 @@ class DualCameraManager(
                 .start(ContextCompat.getMainExecutor(activity)) { /* Event handling in stopDualRecording */ }
             
             Log.d(TAG, "Dual recording started: $timestamp")
+            
+            // Start trip logging if enabled
+            if (activity is MainActivity) {
+                activity.startTripLoggingIfEnabled()
+            }
+            
             true
             
         } catch (e: Exception) {
@@ -317,6 +324,11 @@ class DualCameraManager(
             // Clean up recording references
             frontRecording = null
             backRecording = null
+            
+            // Stop trip logging
+            if (activity is MainActivity) {
+                activity.stopTripLogging()
+            }
             
             // Log summary
             if (frontError != null || backError != null) {

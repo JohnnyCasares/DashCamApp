@@ -11,6 +11,7 @@ import com.kasahirotech.dashcamapp.settings.items.AudioToggleSetting
 import com.kasahirotech.dashcamapp.settings.items.DualCameraToggleSetting
 import com.kasahirotech.dashcamapp.settings.items.SpeedDisplayToggleSetting
 import com.kasahirotech.dashcamapp.settings.items.SpeedUnitSetting
+import com.kasahirotech.dashcamapp.settings.items.TripLogToggleSetting
 import com.kasahirotech.dashcamapp.settings.items.VideoQualitySetting
 
 class Settings : AppCompatActivity() {
@@ -44,13 +45,15 @@ class Settings : AppCompatActivity() {
             // Callback when speed unit changes - refresh the adapter
             adapter.notifyDataSetChanged()
         }
+        val tripLogToggle = TripLogToggleSetting(this)
 
         var settingsList = mutableListOf<SettingItem>(
             audioToggle,
             dualCameraToggle,
             videoQualitySetting,
             speedDisplayToggle,
-            speedUnitSetting
+            speedUnitSetting,
+            tripLogToggle
         )
 
         adapter = SettingsAdapter(settingsList){ clickedSettingItem ->

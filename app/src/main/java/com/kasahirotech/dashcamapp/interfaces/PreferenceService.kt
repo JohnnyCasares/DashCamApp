@@ -1,0 +1,108 @@
+package com.kasahirotech.dashcamapp.interfaces
+
+import android.content.Context
+import androidx.camera.video.Quality
+
+/**
+ * Interface for managing application preferences.
+ * Provides abstraction for preference storage operations, enabling
+ * testability and flexibility in storage implementation.
+ */
+interface PreferenceService {
+    
+    /**
+     * Checks if audio recording is enabled in user preferences.
+     * 
+     * @param context Application or Activity context
+     * @return true if audio recording is enabled, false otherwise
+     */
+    fun isAudioRecordingEnabled(context: Context): Boolean
+    
+    /**
+     * Sets the audio recording preference.
+     * 
+     * @param context Application or Activity context
+     * @param enabled true to enable audio recording, false to disable
+     */
+    fun setAudioRecordingEnabled(context: Context, enabled: Boolean)
+    
+    /**
+     * Checks if dual camera recording is enabled in user preferences.
+     * 
+     * @param context Application or Activity context
+     * @return true if dual camera recording is enabled, false otherwise
+     */
+    fun isDualCameraEnabled(context: Context): Boolean
+    
+    /**
+     * Sets the dual camera recording preference.
+     * 
+     * @param context Application or Activity context
+     * @param enabled true to enable dual camera recording, false to disable
+     */
+    fun setDualCameraEnabled(context: Context, enabled: Boolean)
+    
+    /**
+     * Gets the video recording quality from user preferences.
+     * 
+     * @param context Application or Activity context
+     * @return Quality enum value
+     */
+    fun getVideoQuality(context: Context): Quality
+    
+    /**
+     * Sets the video recording quality preference.
+     * 
+     * @param context Application or Activity context
+     * @param quality Quality enum value to store
+     */
+    fun setVideoQuality(context: Context, quality: Quality)
+    
+    /**
+     * Checks if speed display is enabled in user preferences.
+     * 
+     * @param context Application or Activity context
+     * @return true if speed display is enabled, false otherwise
+     */
+    fun isSpeedDisplayEnabled(context: Context): Boolean
+    
+    /**
+     * Sets the speed display enabled preference.
+     * 
+     * @param context Application or Activity context
+     * @param enabled true to enable speed display, false to disable
+     */
+    fun setSpeedDisplayEnabled(context: Context, enabled: Boolean)
+    
+    /**
+     * Gets the speed unit preference.
+     * 
+     * @param context Application or Activity context
+     * @return Speed unit string ("mph" or "kmh")
+     */
+    fun getSpeedUnit(context: Context): String
+    
+    /**
+     * Sets the speed unit preference.
+     * 
+     * @param context Application or Activity context
+     * @param unit Speed unit string ("mph" or "kmh")
+     */
+    fun setSpeedUnit(context: Context, unit: String)
+    
+    /**
+     * Checks if trip logging is enabled in user preferences.
+     * 
+     * @param context Application or Activity context
+     * @return true if trip logging is enabled, false otherwise
+     */
+    fun isTripLogEnabled(context: Context): Boolean
+    
+    /**
+     * Sets the trip logging preference.
+     * 
+     * @param context Application or Activity context
+     * @param enabled true to enable trip logging, false to disable
+     */
+    fun setTripLogEnabled(context: Context, enabled: Boolean)
+}

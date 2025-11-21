@@ -24,6 +24,7 @@ import androidx.camera.video.VideoCapture
 import androidx.camera.video.VideoRecordEvent
 import androidx.core.content.ContextCompat
 import androidx.core.content.PermissionChecker
+import com.kasahirotech.dashcamapp.MainActivity
 import com.kasahirotech.dashcamapp.R
 import com.kasahirotech.dashcamapp.databinding.ActivityMainBinding
 import com.kasahirotech.dashcamapp.interfaces.CameraService
@@ -143,6 +144,11 @@ class Camera
                             override fun onAnimationRepeat(animation: Animation?) { /* Not used */ }
                         })
                         binding.btnRecordAndStop.startAnimation(animation)
+                        
+                        // Start trip logging if enabled
+                        if (activity is MainActivity) {
+                            activity.startTripLoggingIfEnabled()
+                        }
                     }
 
                     is VideoRecordEvent.Finalize -> {
@@ -170,6 +176,11 @@ class Camera
                             override fun onAnimationRepeat(animation: Animation?) { /* Not used */ }
                         })
                         binding.btnRecordAndStop.startAnimation(animation)
+                        
+                        // Stop trip logging
+                        if (activity is MainActivity) {
+                            activity.stopTripLogging()
+                        }
                     }
                 }
             }

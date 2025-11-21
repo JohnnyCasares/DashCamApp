@@ -10,6 +10,7 @@ import com.kasahirotech.dashcamapp.settings.items.AudioToggleSetting
 import com.kasahirotech.dashcamapp.settings.items.DualCameraToggleSetting
 import com.kasahirotech.dashcamapp.settings.items.SpeedDisplayToggleSetting
 import com.kasahirotech.dashcamapp.settings.items.SpeedUnitSetting
+import com.kasahirotech.dashcamapp.settings.items.TripLogToggleSetting
 import com.kasahirotech.dashcamapp.settings.items.VideoQualitySetting
 
 class SettingsAdapter(
@@ -104,6 +105,18 @@ class SettingsAdapter(
                         setting.toggle()
                     }
                 }
+                is TripLogToggleSetting -> {
+                    binding.switchToggle.isChecked = setting.isEnabled
+                    binding.switchToggle.isEnabled = true
+                    binding.root.alpha = 1.0f
+                    binding.switchToggle.setOnCheckedChangeListener { _, _ ->
+                        setting.toggle()
+                    }
+                    // Also handle click to view logs
+                    binding.root.setOnClickListener {
+                        onItemClicked(setting)
+                    }
+                }
             }
         }
     }
@@ -113,6 +126,7 @@ class SettingsAdapter(
             is AudioToggleSetting -> VIEW_TYPE_TOGGLE
             is DualCameraToggleSetting -> VIEW_TYPE_TOGGLE
             is SpeedDisplayToggleSetting -> VIEW_TYPE_TOGGLE
+            is TripLogToggleSetting -> VIEW_TYPE_TOGGLE
             is VideoQualitySetting -> VIEW_TYPE_CLICK
             is SpeedUnitSetting -> VIEW_TYPE_CLICK
             else -> VIEW_TYPE_CLICK
