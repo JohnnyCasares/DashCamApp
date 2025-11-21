@@ -8,6 +8,8 @@ import com.kasahirotech.dashcamapp.databinding.ItemSettingToggleBinding
 import com.kasahirotech.dashcamapp.interfaces.SettingItem
 import com.kasahirotech.dashcamapp.settings.items.AudioToggleSetting
 import com.kasahirotech.dashcamapp.settings.items.DualCameraToggleSetting
+import com.kasahirotech.dashcamapp.settings.items.SpeedDisplayToggleSetting
+import com.kasahirotech.dashcamapp.settings.items.SpeedUnitSetting
 import com.kasahirotech.dashcamapp.settings.items.VideoQualitySetting
 
 class SettingsAdapter(
@@ -27,12 +29,32 @@ class SettingsAdapter(
             binding.tvTitle.text = setting.title
             binding.ivIcon.setImageResource(setting.icon)
             
-            // Handle subtitle for VideoQualitySetting
-            if (setting is VideoQualitySetting) {
-                binding.tvSubtitle.text = setting.getCurrentQualityText()
-                binding.tvSubtitle.visibility = android.view.View.VISIBLE
-            } else {
-                binding.tvSubtitle.visibility = android.view.View.GONE
+            // Handle subtitle for settings with subtitles
+            when (setting) {
+                is VideoQualitySetting -> {
+                    binding.tvSubtitle.text = setting.getCurrentQualityText()
+                    binding.tvSubtitle.visibility = android.view.View.VISIBLE
+                    binding.root.alpha = 1.0f
+                    binding.root.isEnabled = true
+                }
+                is SpeedUnitSetting -> {
+                    binding.tvSubtitle.text = setting.getCurrentUnit()
+                    binding.tvSubtitle.visibility = android.view.View.VISIBLE
+                    
+                    // Gray out if speed display is disabled
+                    if (setting.isEnabled) {
+                        binding.root.alpha = 1.0f
+                        binding.root.isEnabled = true
+                    } else {
+                        binding.root.alpha = 0.5f
+                        binding.root.isEnabled = false
+                    }
+                }
+                else -> {
+                    binding.tvSubtitle.visibility = android.view.View.GONE
+                    binding.root.alpha = 1.0f
+                    binding.root.isEnabled = true
+                }
             }
             
             binding.root.setOnClickListener {
@@ -74,6 +96,14 @@ class SettingsAdapter(
                         }
                     }
                 }
+                is SpeedDisplayToggleSetting -> {
+                    binding.switchToggle.isChecked = setting.isEnabled
+                    binding.switchToggle.isEnabled = true
+                    binding.root.alpha = 1.0f
+                    binding.switchToggle.setOnCheckedChangeListener { _, _ ->
+                        setting.toggle()
+                    }
+                }
             }
         }
     }
@@ -82,7 +112,9 @@ class SettingsAdapter(
         return when (settings[position]) {
             is AudioToggleSetting -> VIEW_TYPE_TOGGLE
             is DualCameraToggleSetting -> VIEW_TYPE_TOGGLE
+            is SpeedDisplayToggleSetting -> VIEW_TYPE_TOGGLE
             is VideoQualitySetting -> VIEW_TYPE_CLICK
+            is SpeedUnitSetting -> VIEW_TYPE_CLICK
             else -> VIEW_TYPE_CLICK
         }
     }

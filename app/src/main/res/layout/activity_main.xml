@@ -8,16 +8,33 @@
     android:padding="20dp"
     tools:context=".MainActivity">
 
+    <TextView
+        android:id="@+id/tvSpeed"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/bg_speed_display"
+        android:padding="8dp"
+        android:text="-- mph"
+        android:textColor="@android:color/white"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:visibility="visible" />
+
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/cardView"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_margin="8dp"
         app:cardCornerRadius="20dp"
-        app:layout_constraintBottom_toTopOf="@id/divider"
+        app:layout_constraintBottom_toTopOf="@+id/divider"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toBottomOf="@id/tvSpeed">
 
         <!-- Single camera preview (visible by default) -->
         <androidx.camera.view.PreviewView
@@ -37,9 +54,9 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Back Camera"
+                android:background="@color/md_theme_surfaceVariant"
                 android:gravity="center"
-                android:background="@color/md_theme_surfaceVariant"/>
+                android:text="Back Camera" />
 
             <androidx.camera.view.PreviewView
                 android:id="@+id/viewFinderBack"
@@ -55,9 +72,9 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Front Camera"
+                android:background="@color/md_theme_surfaceVariant"
                 android:gravity="center"
-                android:background="@color/md_theme_surfaceVariant"/>
+                android:text="Front Camera" />
 
             <androidx.camera.view.PreviewView
                 android:id="@+id/viewFinderFront"

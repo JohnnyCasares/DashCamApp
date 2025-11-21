@@ -39,12 +39,26 @@ class PermissionHandler(private val context: Context) {
         }
     }
 
+    fun getLocationPermissions(): Array<String> {
+        // Location permission for speed display feature
+        return arrayOf(ACCESS_FINE_LOCATION)
+    }
+
+    fun hasLocationPermission(): Boolean {
+        // Check if location permission is granted
+        return ContextCompat.checkSelfPermission(
+            context,
+            ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+    }
+
     companion object {
         // Define all possible permissions here
         const val CAMERA = Manifest.permission.CAMERA
         const val RECORD_AUDIO = Manifest.permission.RECORD_AUDIO
         const val WRITE_STORAGE = Manifest.permission.WRITE_EXTERNAL_STORAGE
         const val READ_MEDIA_VIDEO = Manifest.permission.READ_MEDIA_VIDEO
+        const val ACCESS_FINE_LOCATION = Manifest.permission.ACCESS_FINE_LOCATION
 
         // Use a function to get the correct permissions based on the device's SDK version
         val REQUIRED_PERMISSIONS: Array<String> =

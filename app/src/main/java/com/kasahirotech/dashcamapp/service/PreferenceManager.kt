@@ -17,6 +17,10 @@ object PreferenceManager {
     private const val DEFAULT_DUAL_CAMERA_ENABLED = false
     private const val KEY_VIDEO_QUALITY = "video_quality"
     private const val DEFAULT_VIDEO_QUALITY = "HIGHEST"
+    private const val KEY_SPEED_DISPLAY_ENABLED = "speed_display_enabled"
+    private const val DEFAULT_SPEED_DISPLAY_ENABLED = false
+    private const val KEY_SPEED_UNIT = "speed_unit"
+    private const val DEFAULT_SPEED_UNIT = "mph"
     private const val TAG = "PreferenceManager"
     
     /**
@@ -132,6 +136,68 @@ object PreferenceManager {
             prefs.edit().putString(KEY_VIDEO_QUALITY, qualityString).apply()
         } catch (e: Exception) {
             Log.e(TAG, "Error writing video quality preference", e)
+        }
+    }
+    
+    /**
+     * Checks if speed display is enabled in user preferences.
+     * 
+     * @param context Application or Activity context
+     * @return true if speed display is enabled, false otherwise. Defaults to false on first launch.
+     */
+    fun isSpeedDisplayEnabled(context: Context): Boolean {
+        return try {
+            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            prefs.getBoolean(KEY_SPEED_DISPLAY_ENABLED, DEFAULT_SPEED_DISPLAY_ENABLED)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error reading speed display preference", e)
+            DEFAULT_SPEED_DISPLAY_ENABLED
+        }
+    }
+    
+    /**
+     * Sets the speed display enabled preference.
+     * 
+     * @param context Application or Activity context
+     * @param enabled true to enable speed display, false to disable
+     */
+    fun setSpeedDisplayEnabled(context: Context, enabled: Boolean) {
+        try {
+            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            prefs.edit().putBoolean(KEY_SPEED_DISPLAY_ENABLED, enabled).apply()
+        } catch (e: Exception) {
+            Log.e(TAG, "Error writing speed display preference", e)
+        }
+    }
+    
+    /**
+     * Gets the speed unit preference.
+     * 
+     * @param context Application or Activity context
+     * @return Speed unit string ("mph" or "kmh"). Defaults to "mph" on first launch.
+     */
+    fun getSpeedUnit(context: Context): String {
+        return try {
+            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            prefs.getString(KEY_SPEED_UNIT, DEFAULT_SPEED_UNIT) ?: DEFAULT_SPEED_UNIT
+        } catch (e: Exception) {
+            Log.e(TAG, "Error reading speed unit preference", e)
+            DEFAULT_SPEED_UNIT
+        }
+    }
+    
+    /**
+     * Sets the speed unit preference.
+     * 
+     * @param context Application or Activity context
+     * @param unit Speed unit string ("mph" or "kmh")
+     */
+    fun setSpeedUnit(context: Context, unit: String) {
+        try {
+            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            prefs.edit().putString(KEY_SPEED_UNIT, unit).apply()
+        } catch (e: Exception) {
+            Log.e(TAG, "Error writing speed unit preference", e)
         }
     }
 }

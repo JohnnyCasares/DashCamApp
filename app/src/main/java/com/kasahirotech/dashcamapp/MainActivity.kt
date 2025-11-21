@@ -12,6 +12,7 @@ import com.kasahirotech.dashcamapp.service.Camera
 import com.kasahirotech.dashcamapp.service.DualCameraManager
 import com.kasahirotech.dashcamapp.service.PermissionHandler
 import com.kasahirotech.dashcamapp.service.PreferenceManager
+import com.kasahirotech.dashcamapp.service.SpeedTracker
 import com.kasahirotech.dashcamapp.settings.Settings
 
 class MainActivity : AppCompatActivity() {
@@ -19,6 +20,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var camera: Camera
     private lateinit var dualCameraManager: DualCameraManager
     private lateinit var permissionHandler: PermissionHandler
+    private var speedTracker: SpeedTracker? = null
 
     private var isDualCameraMode = false
 
@@ -26,6 +28,7 @@ class MainActivity : AppCompatActivity() {
         STARTUP,
         RECORD,
         GALLERY,
+        SPEED_DISPLAY,
         NONE
     }
 
@@ -57,6 +60,9 @@ class MainActivity : AppCompatActivity() {
                 PermissionRequestContext.STARTUP -> {
                     initializeCameraMode()
                 }
+                PermissionRequestContext.SPEED_DISPLAY -> {
+                    startSpeedTrackingIfEnabled()
+                }
                 PermissionRequestContext.NONE -> {}
             }
         } else {
@@ -64,6 +70,7 @@ class MainActivity : AppCompatActivity() {
                 PermissionRequestContext.RECORD -> "Camera and microphone permissions are required to record videos"
                 PermissionRequestContext.GALLERY -> "Media access permission is required to view videos"
                 PermissionRequestContext.STARTUP -> "Permission request denied"
+                PermissionRequestContext.SPEED_DISPLAY -> "Location permission is required for speed display"
                 PermissionRequestContext.NONE -> "Permission request denied"
             }
             Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show()
@@ -88,6 +95,7 @@ class MainActivity : AppCompatActivity() {
         )
         setContentView(binding.root)
 
+        initializeSpeedDisplay()
         this.permissionCheck()
 
         binding.imgBtnGallery.setOnClickListener {
@@ -158,6 +166,66 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         if (permissionHandler.allPermissionsGranted()) {
             initializeCameraMode()
+        }
+        
+        startSpeedTrackingIfEnabled()
+    }
+    
+    override fun onPause() {
+        super.onPause()
+        speedTracker?.stopTracking()
+    }
+    
+    private fun initializeSpeedDisplay() {
+        speedTracker = SpeedTracker(this) { speed, unit ->
+            runOnUiThread {
+                updateSpeedDisplay(speed, unit)
+            }
+        }
+    }
+    
+    private fun startSpeedTrackingIfEnabled() {
+        if (PreferenceManager.isSpeedDisplayEnabled(this)) {
+            if (permissionHandler.hasLocationPermission()) {
+                val unitString = PreferenceManager.getSpeedUnit(this)
+                val unit = if (unitString == "kmh") SpeedTracker.SpeedUnit.KMH else SpeedTracker.SpeedUnit.MPH
+                speedTracker?.setSpeedUnit(unit)
+                speedTracker?.startTracking()
+                binding.tvSpeed.visibility = View.VISIBLE
+            } else {
+                binding.tvSpeed.visibility = View.GONE
+                requestLocationPermissionForSpeedDisplay()
+            }
+        } else {
+            speedTracker?.stopTracking()
+            binding.tvSpeed.visibility = View.GONE
+        }
+    }
+    
+    fun requestLocationPermissionForSpeedDisplay() {
+        if (shouldShowRequestPermissionRationale(PermissionHandler.ACCESS_FINE_LOCATION)) {
+            android.app.AlertDialog.Builder(this)
+                .setTitle("Location Permission Required")
+                .setMessage("Speed display requires location access to show your current speed using GPS.")
+                .setPositiveButton("Grant Permission") { _, _ ->
+                    currentPermissionContext = PermissionRequestContext.SPEED_DISPLAY
+                    activityResultLauncher.launch(permissionHandler.getLocationPermissions())
+                }
+                .setNegativeButton("Cancel", null)
+                .show()
+        } else {
+            currentPermissionContext = PermissionRequestContext.SPEED_DISPLAY
+            activityResultLauncher.launch(permissionHandler.getLocationPermissions())
+        }
+    }
+    
+    private fun updateSpeedDisplay(speed: Float, unit: SpeedTracker.SpeedUnit) {
+        val unitLabel = if (unit == SpeedTracker.SpeedUnit.MPH) "mph" else "km/h"
+        
+        if (speed < 0) {
+            binding.tvSpeed.text = "-- $unitLabel"
+        } else {
+            binding.tvSpeed.text = "${speed.toInt()} $unitLabel"
         }
     }
 }
