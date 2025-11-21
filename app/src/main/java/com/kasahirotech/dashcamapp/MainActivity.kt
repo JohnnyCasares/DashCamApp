@@ -238,6 +238,7 @@ class MainActivity : AppCompatActivity() {
     /**
      * Starts trip logging if the feature is enabled in preferences.
      * Called when video recording starts.
+     * Location permission is optional - logs will be created without GPS data if not granted.
      */
     fun startTripLoggingIfEnabled() {
         val isTripLogEnabled = PreferenceManager.isTripLogEnabled(this)
@@ -246,17 +247,17 @@ class MainActivity : AppCompatActivity() {
         android.util.Log.d("MainActivity", "Trip log enabled: $isTripLogEnabled, Location permission: $hasLocationPerm")
         
         if (isTripLogEnabled) {
-            if (hasLocationPerm) {
-                val success = tripLogger.startLogging(this)
-                android.util.Log.d("MainActivity", "Trip logging start result: $success")
-                if (!success) {
-                    Toast.makeText(this, "Unable to start trip logging", Toast.LENGTH_SHORT).show()
-                } else {
-                    Toast.makeText(this, "Trip logging started", Toast.LENGTH_SHORT).show()
-                }
+            val success = tripLogger.startLogging(this)
+            android.util.Log.d("MainActivity", "Trip logging start result: $success")
+            
+            if (!success) {
+                Toast.makeText(this, "Unable to start trip logging", Toast.LENGTH_SHORT).show()
             } else {
-                android.util.Log.w("MainActivity", "Trip logging not started: missing location permission")
-                Toast.makeText(this, "Trip logging requires location permission", Toast.LENGTH_SHORT).show()
+                if (hasLocationPerm) {
+                    Toast.makeText(this, "Trip logging started", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(this, "Trip logging started (no GPS)", Toast.LENGTH_SHORT).show()
+                }
             }
         } else {
             android.util.Log.d("MainActivity", "Trip logging not started: feature disabled in settings")

@@ -9,10 +9,16 @@
 4. **Toggle the switch ON** (this is required - it's OFF by default)
 5. Tap anywhere on the "Trip Log" row to view existing logs (will be empty initially)
 
-### Step 2: Grant Location Permission
-- The app needs location permission to record GPS coordinates
-- If not already granted, you'll see a toast message when recording starts
-- Grant "Allow all the time" or "Allow while using the app" for best results
+### Step 2: Location Permission (Optional)
+- **Location permission is OPTIONAL** - the app will work without it
+- If you don't grant location permission:
+  - Trip logs will still be created
+  - GPS coordinates and speed will show as "N/A" in the log
+  - You'll see a toast: "Trip logging started (no GPS)"
+- If you grant location permission:
+  - Trip logs will include GPS coordinates and speed
+  - You'll see a toast: "Trip logging started"
+- To grant permission: Settings → Apps → DashCam → Permissions → Location
 
 ### Step 3: Record a Video
 1. Go back to the main screen
@@ -34,6 +40,8 @@
 - File format: `trip_log_YYYYMMDD_HHMMSS.txt`
 
 ## Log File Format
+
+### With Location Permission:
 ```
 Trip Log
 Start Time: 2025-11-20 14:30:15
@@ -45,14 +53,27 @@ Timestamp,Latitude,Longitude,Speed (mph)
 ...
 ```
 
+### Without Location Permission:
+```
+Trip Log
+Start Time: 2025-11-20 14:30:15
+Format Version: 1.0
+GPS: Disabled (no location permission)
+---
+Timestamp,Latitude,Longitude,Speed (mph)
+2025-11-20 14:30:20,N/A,N/A,N/A
+2025-11-20 14:30:25,N/A,N/A,N/A
+...
+```
+
 ## Troubleshooting
 
 ### No logs are created
 1. **Check if trip logging is enabled**: Go to Settings and make sure the "Trip Log" toggle is ON
-2. **Check location permission**: Make sure the app has location permission
-3. **Check logcat**: Look for messages with tag "TripLogger" or "MainActivity"
+2. **Check logcat**: Look for messages with tag "TripLogger" or "MainActivity"
    - Should see: "Trip logging started successfully!"
    - Should see: "Log file: /path/to/file"
+   - Should see: "GPS enabled: true" or "GPS enabled: false"
 
 ### Logs are empty
 - GPS might not have a fix yet

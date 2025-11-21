@@ -78,10 +78,10 @@ class TripLogger(
             return true
         }
         
-        // Check location permission
-        if (!hasLocationPermission()) {
-            Log.e(TAG, "Cannot start trip logging: location permission not granted")
-            return false
+        // Check location permission (optional - will log without GPS if not granted)
+        val hasLocationPerm = hasLocationPermission()
+        if (!hasLocationPerm) {
+            Log.w(TAG, "Location permission not granted - will log without GPS data")
         }
         
         // Get trip logs directory
@@ -105,15 +105,22 @@ class TripLogger(
             logWriter = BufferedWriter(FileWriter(currentLogFile!!))
             
             // Write header
-            writeHeader()
+            writeHeader(hasLocationPerm)
             
-            // Start location updates
-            locationManager.requestLocationUpdates(
-                LocationManager.GPS_PROVIDER,
-                UPDATE_INTERVAL_MS,
-                MIN_DISTANCE_METERS,
-                locationListener
-            )
+            // Start location updates only if permission granted
+            if (hasLocationPerm) {
+                try {
+                    locationManager.requestLocationUpdates(
+                        LocationManager.GPS_PROVIDER,
+                        UPDATE_INTERVAL_MS,
+                        MIN_DISTANCE_METERS,
+                        locationListener
+                    )
+                    Log.d(TAG, "Location updates started")
+                } catch (e: SecurityException) {
+                    Log.w(TAG, "Failed to start location updates: ${e.message}")
+                }
+            }
             
             // Start periodic logging timer
             startLogTimer()
@@ -121,11 +128,8 @@ class TripLogger(
             isLogging = true
             Log.d(TAG, "Trip logging started successfully!")
             Log.d(TAG, "Log file: ${currentLogFile?.absolutePath}")
+            Log.d(TAG, "GPS enabled: $hasLocationPerm")
             true
-        } catch (e: SecurityException) {
-            Log.e(TAG, "Security exception starting trip logging", e)
-            cleanup()
-            false
         } catch (e: Exception) {
             Log.e(TAG, "Error starting trip logging", e)
             cleanup()
@@ -194,7 +198,7 @@ class TripLogger(
     /**
      * Writes the header section to the log file.
      */
-    private fun writeHeader() {
+    private fun writeHeader(hasLocationPermission: Boolean) {
         val startTime = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US).format(Date())
         val unitLabel = if (currentSpeedUnit == "kmh") "km/h" else "mph"
         
@@ -202,6 +206,9 @@ class TripLogger(
             write("Trip Log\n")
             write("Start Time: $startTime\n")
             write("Format Version: 1.0\n")
+            if (!hasLocationPermission) {
+                write("GPS: Disabled (no location permission)\n")
+            }
             write("---\n")
             write("Timestamp,Latitude,Longitude,Speed ($unitLabel)\n")
             flush()
@@ -224,27 +231,34 @@ class TripLogger(
      * Logs the current location to the file.
      */
     private fun logCurrentLocation() {
-        val location = lastLocation
-        
-        if (location == null) {
-            Log.d(TAG, "Skipping log entry: GPS data unavailable")
-            return
-        }
-        
         logScope.launch {
             try {
                 val timestamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US).format(Date())
-                val latitude = String.format(Locale.US, "%.6f", location.latitude)
-                val longitude = String.format(Locale.US, "%.6f", location.longitude)
+                val location = lastLocation
                 
-                // Get speed and convert to appropriate unit
-                val speedMps = if (location.hasSpeed()) location.speed else 0f
-                val speed = if (currentSpeedUnit == "kmh") {
-                    speedMps * MPS_TO_KMH
+                val latitude: String
+                val longitude: String
+                val speedStr: String
+                
+                if (location != null) {
+                    // GPS data available
+                    latitude = String.format(Locale.US, "%.6f", location.latitude)
+                    longitude = String.format(Locale.US, "%.6f", location.longitude)
+                    
+                    // Get speed and convert to appropriate unit
+                    val speedMps = if (location.hasSpeed()) location.speed else 0f
+                    val speed = if (currentSpeedUnit == "kmh") {
+                        speedMps * MPS_TO_KMH
+                    } else {
+                        speedMps * MPS_TO_MPH
+                    }
+                    speedStr = String.format(Locale.US, "%.1f", speed)
                 } else {
-                    speedMps * MPS_TO_MPH
+                    // No GPS data - write null values
+                    latitude = "N/A"
+                    longitude = "N/A"
+                    speedStr = "N/A"
                 }
-                val speedStr = String.format(Locale.US, "%.1f", speed)
                 
                 // Write entry
                 logWriter?.apply {
