@@ -105,4 +105,86 @@ interface PreferenceService {
      * @param enabled true to enable trip logging, false to disable
      */
     fun setTripLogEnabled(context: Context, enabled: Boolean)
+    
+    // Google Drive Upload Settings
+    
+    /**
+     * Checks if auto-upload to Google Drive is enabled.
+     * 
+     * @param context Application or Activity context
+     * @return true if auto-upload is enabled, false otherwise
+     */
+    fun isAutoUploadEnabled(context: Context): Boolean
+    
+    /**
+     * Sets the auto-upload preference.
+     * 
+     * @param context Application or Activity context
+     * @param enabled true to enable auto-upload, false to disable
+     */
+    fun setAutoUploadEnabled(context: Context, enabled: Boolean)
+    
+    /**
+     * Checks if WiFi-only mode is enabled for uploads.
+     * 
+     * @param context Application or Activity context
+     * @return true if WiFi-only mode is enabled, false otherwise
+     */
+    fun isWifiOnlyMode(context: Context): Boolean
+    
+    /**
+     * Sets the WiFi-only mode preference.
+     * 
+     * @param context Application or Activity context
+     * @param enabled true to enable WiFi-only mode, false to disable
+     */
+    fun setWifiOnlyMode(context: Context, enabled: Boolean)
+    
+    /**
+     * Gets the minimum battery level required for uploads.
+     * 
+     * @param context Application or Activity context
+     * @return Minimum battery level percentage (0-100)
+     */
+    fun getMinimumBatteryLevel(context: Context): Int
+    
+    /**
+     * Sets the minimum battery level required for uploads.
+     * 
+     * @param context Application or Activity context
+     * @param level Minimum battery level percentage (0-100)
+     */
+    fun setMinimumBatteryLevel(context: Context, level: Int)
+    
+    /**
+     * Gets the maximum number of retry attempts for failed uploads.
+     * 
+     * @param context Application or Activity context
+     * @return Maximum retry attempts
+     */
+    fun getMaxRetryAttempts(context: Context): Int
+    
+    /**
+     * Sets the maximum number of retry attempts for failed uploads.
+     * 
+     * @param context Application or Activity context
+     * @param attempts Maximum retry attempts
+     */
+    fun setMaxRetryAttempts(context: Context, attempts: Int)
+    
+    /**
+     * Checks if local files should be deleted after successful upload.
+     * 
+     * @param context Application or Activity context
+     * @return true if local files should be deleted after upload, false otherwise
+     */
+    fun isDeleteLocalAfterUpload(context: Context): Boolean
+    
+    /**
+     * Sets the delete local after upload preference.
+     * 
+     * @param context Application or Activity context
+     * @param enabled true to delete local files after upload, false to keep them
+     */
+    fun setDeleteLocalAfterUpload(context: Context, enabled: Boolean)
 }

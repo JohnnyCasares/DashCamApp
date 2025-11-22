@@ -67,7 +67,6 @@ class SpeedTracker(
             }
         }
         
-        @Deprecated("Deprecated in API 29")
         override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {
             // Deprecated but required for API compatibility
         }

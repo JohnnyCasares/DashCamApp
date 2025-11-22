@@ -158,6 +158,9 @@ class Camera
 //                            Toast.makeText(activity, msg, Toast.LENGTH_SHORT)
 //                                .show()
                             Log.d(TAG, msg)
+                            
+                            // Auto-upload to Google Drive if enabled
+                            handleAutoUpload(recordEvent.outputResults.outputUri.toString())
                         } else {
                             recording?.close()
                             recording = null
@@ -364,6 +367,64 @@ class Camera
             Log.e(TAG, "Error checking storage space", e)
             // If we can't check, allow the recording attempt
             true
+        }
+    }
+    
+    /**
+     * Handle auto-upload of recorded video to Google Drive
+     */
+    private fun handleAutoUpload(videoUri: String) {
+        try {
+            // Check if auto-upload is enabled
+            if (!PreferenceManager.isAutoUploadEnabled(activity)) {
+                Log.d(TAG, "Auto-upload disabled, skipping")
+                return
+            }
+            
+            // Check if authenticated with Google Drive
+            if (!GoogleDriveManager.isAuthenticated(activity)) {
+                Log.d(TAG, "Not authenticated with Google Drive, skipping auto-upload")
+                return
+            }
+            
+            // Convert URI to file path
+            val videoPath = getFilePathFromUri(videoUri)
+            if (videoPath == null) {
+                Log.e(TAG, "Could not get file path from URI: $videoUri")
+                return
+            }
+            
+            // Add to upload queue
+            UploadQueueManager.addToQueue(activity, videoPath)
+            Log.d(TAG, "Added video to upload queue: $videoPath")
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "Error handling auto-upload", e)
+        }
+    }
+    
+    /**
+     * Convert content URI to file path
+     */
+    private fun getFilePathFromUri(uriString: String): String? {
+        return try {
+            val uri = android.net.Uri.parse(uriString)
+            val cursor = activity.contentResolver.query(uri, null, null, null, null)
+            cursor?.use {
+                if (it.moveToFirst()) {
+                    val columnIndex = it.getColumnIndex(MediaStore.Video.Media.DATA)
+                    if (columnIndex >= 0) {
+                        it.getString(columnIndex)
+                    } else {
+                        null
+                    }
+                } else {
+                    null
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error getting file path from URI", e)
+            null
         }
     }
 

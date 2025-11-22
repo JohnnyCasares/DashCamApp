@@ -8,6 +8,7 @@ import com.kasahirotech.dashcamapp.databinding.ItemSettingToggleBinding
 import com.kasahirotech.dashcamapp.interfaces.SettingItem
 import com.kasahirotech.dashcamapp.settings.items.AudioToggleSetting
 import com.kasahirotech.dashcamapp.settings.items.DualCameraToggleSetting
+import com.kasahirotech.dashcamapp.settings.items.GoogleDriveSetting
 import com.kasahirotech.dashcamapp.settings.items.SpeedDisplayToggleSetting
 import com.kasahirotech.dashcamapp.settings.items.SpeedUnitSetting
 import com.kasahirotech.dashcamapp.settings.items.TripLogToggleSetting
@@ -117,18 +118,23 @@ class SettingsAdapter(
                         onItemClicked(setting)
                     }
                 }
+                is GoogleDriveSetting -> {
+                    binding.switchToggle.isChecked = setting.isEnabled
+                    binding.switchToggle.isEnabled = false
+                    binding.root.alpha = 0.5f
+                    binding.switchToggle.setOnCheckedChangeListener(null)
+                }
             }
         }
     }
 
     override fun getItemViewType(position: Int): Int {
         return when (settings[position]) {
-            is AudioToggleSetting -> VIEW_TYPE_TOGGLE
-            is DualCameraToggleSetting -> VIEW_TYPE_TOGGLE
-            is SpeedDisplayToggleSetting -> VIEW_TYPE_TOGGLE
-            is TripLogToggleSetting -> VIEW_TYPE_TOGGLE
-            is VideoQualitySetting -> VIEW_TYPE_CLICK
-            is SpeedUnitSetting -> VIEW_TYPE_CLICK
+            is AudioToggleSetting,
+            is DualCameraToggleSetting,
+            is SpeedDisplayToggleSetting,
+            is TripLogToggleSetting,
+            is GoogleDriveSetting -> VIEW_TYPE_TOGGLE
             else -> VIEW_TYPE_CLICK
         }
     }

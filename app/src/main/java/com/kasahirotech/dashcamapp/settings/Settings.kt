@@ -1,6 +1,7 @@
 package com.kasahirotech.dashcamapp.settings
 
 import android.os.Bundle
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -9,6 +10,7 @@ import com.kasahirotech.dashcamapp.databinding.ActivitySettingsBinding
 import com.kasahirotech.dashcamapp.interfaces.SettingItem
 import com.kasahirotech.dashcamapp.settings.items.AudioToggleSetting
 import com.kasahirotech.dashcamapp.settings.items.DualCameraToggleSetting
+import com.kasahirotech.dashcamapp.settings.items.GoogleDriveSetting
 import com.kasahirotech.dashcamapp.settings.items.SpeedDisplayToggleSetting
 import com.kasahirotech.dashcamapp.settings.items.SpeedUnitSetting
 import com.kasahirotech.dashcamapp.settings.items.TripLogToggleSetting
@@ -17,6 +19,15 @@ import com.kasahirotech.dashcamapp.settings.items.VideoQualitySetting
 class Settings : AppCompatActivity() {
 
     private lateinit var binding: ActivitySettingsBinding
+    private lateinit var googleDriveSetting: GoogleDriveSetting
+
+    private val googleSignInLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        googleDriveSetting.handleSignInResult(result.data)
+    }
+
+    private val googleDriveFolderPickerLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        googleDriveSetting.handleFolderPickerResult(result.data)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         binding = ActivitySettingsBinding.inflate(layoutInflater)
@@ -46,6 +57,9 @@ class Settings : AppCompatActivity() {
             adapter.notifyDataSetChanged()
         }
         val tripLogToggle = TripLogToggleSetting(this)
+        googleDriveSetting = GoogleDriveSetting(this, {
+            adapter.notifyDataSetChanged()
+        }, googleSignInLauncher, googleDriveFolderPickerLauncher)
 
         var settingsList = mutableListOf<SettingItem>(
             audioToggle,
@@ -53,7 +67,8 @@ class Settings : AppCompatActivity() {
             videoQualitySetting,
             speedDisplayToggle,
             speedUnitSetting,
-            tripLogToggle
+            tripLogToggle,
+            googleDriveSetting
         )
 
         adapter = SettingsAdapter(settingsList){ clickedSettingItem ->

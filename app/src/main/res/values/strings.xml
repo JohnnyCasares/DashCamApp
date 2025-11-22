@@ -14,4 +14,14 @@
     <string name="speed_permission_required">Location permission is required for speed display</string>
     <string name="speed_permission_denied">Location permission denied. Enable in Settings to use speed display.</string>
     <string name="speed_unavailable">-- %s</string>
+    
+    <!-- Google Drive Integration -->
+    <string name="google_drive_client_id">YOUR_CLIENT_ID_HERE.apps.googleusercontent.com</string>
+    <string name="google_drive_title">Google Drive</string>
+    <string name="google_drive_connect">Connect to Google Drive</string>
+    <string name="google_drive_disconnect">Disconnect</string>
+    <string name="google_drive_connected">Connected as: %s</string>
+    <string name="google_drive_auth_failed">Authentication failed. Please try again.</string>
+    <string name="google_drive_upload_success">Upload completed successfully</string>
+    <string name="google_drive_upload_failed">Upload failed: %s</string>
 </resources>
