@@ -1,11 +1,17 @@
 package com.kasahirotech.dashcamapp
 
+import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
+import android.content.ServiceConnection
+import android.os.Build
 import android.os.Bundle
+import android.os.IBinder
 import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.camera.video.Quality
 import com.kasahirotech.dashcamapp.databinding.ActivityMainBinding
 import com.kasahirotech.dashcamapp.screens.Gallery
 import com.kasahirotech.dashcamapp.interfaces.SpeedTrackingService
@@ -13,6 +19,7 @@ import com.kasahirotech.dashcamapp.service.Camera
 import com.kasahirotech.dashcamapp.service.DualCameraManager
 import com.kasahirotech.dashcamapp.service.PermissionHandler
 import com.kasahirotech.dashcamapp.service.PreferenceManager
+import com.kasahirotech.dashcamapp.service.RecordingService
 import com.kasahirotech.dashcamapp.service.SpeedTracker
 import com.kasahirotech.dashcamapp.service.Storage
 import com.kasahirotech.dashcamapp.service.TripLogger
@@ -25,6 +32,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var permissionHandler: PermissionHandler
     private var speedTracker: SpeedTrackingService? = null
     private lateinit var tripLogger: TripLogger
+    private var recordingService: RecordingService? = null
+    private var serviceBound = false
 
     private var isDualCameraMode = false
 
@@ -125,15 +134,8 @@ class MainActivity : AppCompatActivity() {
         binding.btnRecordAndStop.setOnClickListener {
             val recordingPermissions = permissionHandler.getRecordingPermissions()
             if (permissionHandler.arePermissionsGranted(recordingPermissions)) {
-                if (isDualCameraMode) {
-                    if (dualCameraManager.isRecording()) {
-                        dualCameraManager.stopDualRecording()
-                    } else {
-                        dualCameraManager.startDualRecording(PreferenceManager.isAudioRecordingEnabled(this))
-                    }
-                } else {
-                    camera.captureVideo()
-                }
+                // Start RecordingService for background recording using Camera2
+                startBackgroundRecording()
             } else {
                 currentPermissionContext = PermissionRequestContext.RECORD
                 activityResultLauncher.launch(recordingPermissions)
@@ -270,5 +272,110 @@ class MainActivity : AppCompatActivity() {
      */
     fun stopTripLogging() {
         tripLogger.stopLogging()
+    }
+    
+    /**
+     * Start background recording using RecordingService with Camera2 API
+     */
+    private fun startBackgroundRecording() {
+        // Check if already recording
+        if (recordingService?.isRecording() == true) {
+            // Stop recording
+            stopBackgroundRecording()
+            return
+        }
+        
+        // Stop CameraX preview to release camera for Camera2
+        val cameraProvider = androidx.camera.lifecycle.ProcessCameraProvider.getInstance(this)
+        cameraProvider.addListener({
+            try {
+                cameraProvider.get().unbindAll()
+                android.util.Log.d("MainActivity", "CameraX unbound, starting Camera2 recording")
+                
+                // Hide preview since camera is released
+                binding.viewFinder.visibility = View.GONE
+                binding.dualPreviewContainer.visibility = View.GONE
+                
+                // Create intent for RecordingService
+                val intent = Intent(this, RecordingService::class.java).apply {
+                    action = RecordingService.ACTION_START_RECORDING
+                    putExtra(RecordingService.EXTRA_AUDIO_ENABLED, PreferenceManager.isAudioRecordingEnabled(this@MainActivity))
+                    val quality = PreferenceManager.getVideoQuality(this@MainActivity)
+                    val qualityName = when (quality) {
+                        Quality.HD -> "HD"
+                        Quality.FHD -> "FHD"
+                        Quality.UHD -> "UHD"
+                        else -> "FHD"
+                    }
+                    putExtra(RecordingService.EXTRA_VIDEO_QUALITY, qualityName)
+                }
+                
+                // Start foreground service
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    startForegroundService(intent)
+                } else {
+                    startService(intent)
+                }
+                
+                // Bind to service to get recording state
+                bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
+                
+                // Start trip logging if enabled
+                startTripLoggingIfEnabled()
+            } catch (e: Exception) {
+                android.util.Log.e("MainActivity", "Error starting recording", e)
+                Toast.makeText(this, "Failed to start recording", Toast.LENGTH_SHORT).show()
+            }
+        }, androidx.core.content.ContextCompat.getMainExecutor(this))
+    }
+    
+    /**
+     * Stop background recording
+     */
+    private fun stopBackgroundRecording() {
+        val intent = Intent(this, RecordingService::class.java).apply {
+            action = RecordingService.ACTION_STOP_RECORDING
+        }
+        startService(intent)
+        
+        // Unbind from service
+        if (serviceBound) {
+            unbindService(serviceConnection)
+            serviceBound = false
+        }
+        
+        // Stop trip logging
+        stopTripLogging()
+        
+        // Restart CameraX preview after a short delay
+        binding.viewFinder.postDelayed({
+            if (permissionHandler.allPermissionsGranted()) {
+                initializeCameraMode()
+            }
+        }, 500)
+    }
+    
+    /**
+     * Service connection for RecordingService
+     */
+    private val serviceConnection = object : ServiceConnection {
+        override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+            val binder = service as RecordingService.LocalBinder
+            recordingService = binder.getService()
+            serviceBound = true
+        }
+        
+        override fun onServiceDisconnected(name: ComponentName?) {
+            recordingService = null
+            serviceBound = false
+        }
+    }
+    
+    override fun onDestroy() {
+        super.onDestroy()
+        if (serviceBound) {
+            unbindService(serviceConnection)
+            serviceBound = false
+        }
     }
 }

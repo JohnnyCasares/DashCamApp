@@ -22,8 +22,8 @@ This feature enables the DashCamApp to continue recording video when the applica
 #### Acceptance Criteria
 
 1. WHEN a user starts recording and minimizes the DashCamApp THEN the system SHALL continue the recording session without interruption
-2. WHEN the DashCamApp is running in the background THEN the system SHALL maintain camera access and write video data to storage
-3. WHEN a recording session is active in the background THEN the system SHALL preserve all recording settings including audio, quality, and dual camera mode
+2. WHEN the DashCamApp is running in the background THEN the system SHALL maintain camera access using Camera2 API and write video data to storage
+3. WHEN a recording session is active in the background THEN the system SHALL preserve all recording settings including audio and quality
 4. WHEN the device screen turns off during recording THEN the system SHALL continue recording without stopping
 5. WHEN the user switches to another application during recording THEN the system SHALL maintain the recording session
 
@@ -108,3 +108,15 @@ This feature enables the DashCamApp to continue recording video when the applica
 2. WHEN the back button moves the app to background THEN the system SHALL not stop the recording session
 3. WHEN the app moves to background via back button THEN the system SHALL maintain the foreground service and notification
 4. WHEN the user presses back button while not recording THEN the system SHALL follow standard Android back navigation behavior
+
+### Requirement 9
+
+**User Story:** As a developer, I want background recording to use Camera2 API instead of CameraX, so that camera resources remain available when the app is backgrounded.
+
+#### Acceptance Criteria
+
+1. WHEN background recording is initiated THEN the system SHALL use Camera2 API to access camera hardware
+2. WHEN the Camera2 implementation opens the camera THEN the system SHALL manage CameraDevice lifecycle independently of Activity lifecycle
+3. WHEN recording in the background THEN the system SHALL use MediaRecorder for video encoding
+4. WHEN the foreground service is running THEN the system SHALL maintain camera access regardless of Activity state
+5. WHERE the app is in the foreground THEN the system MAY continue using CameraX for preview and UI-bound operations
