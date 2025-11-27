@@ -176,99 +176,20 @@ class MainActivity : AppCompatActivity() {
     override fun onPause() {
         super.onPause()
         speedTracker?.stopTracking()
-        
-        // If recording with CameraX, switch to Camera2 for background
-        if (isCurrentlyRecording) {
-            switchToBackgroundRecording()
-        }
+        // Recording continues in background via Camera2 service - no action needed
+        android.util.Log.d("MainActivity", "onPause - recording continues in background")
     }
     
     override fun onResume() {
         super.onResume()
-        if (permissionHandler.allPermissionsGranted()) {
-            // If Camera2 service is recording, switch back to CameraX
-            if (recordingService?.isRecording() == true) {
-                switchToForegroundRecording()
-            } else {
-                initializeCameraMode()
-            }
+        
+        // Restart CameraX preview only if NOT recording
+        if (permissionHandler.allPermissionsGranted() && !isCurrentlyRecording) {
+            initializeCameraMode()
         }
         
         startSpeedTrackingIfEnabled()
-    }
-    
-    private fun switchToBackgroundRecording() {
-        android.util.Log.d("MainActivity", "Switching to background recording (Camera2)")
-        
-        // Stop CameraX recording
-        if (isDualCameraMode) {
-            dualCameraManager.stopDualRecording()
-        } else {
-            camera.captureVideo() // Stop current recording
-        }
-        
-        // Small delay to ensure CameraX releases the camera
-        binding.viewFinder.postDelayed({
-            // Unbind CameraX
-            val cameraProvider = androidx.camera.lifecycle.ProcessCameraProvider.getInstance(this)
-            cameraProvider.addListener({
-                try {
-                    cameraProvider.get().unbindAll()
-                    android.util.Log.d("MainActivity", "CameraX unbound")
-                    
-                    // Start Camera2 background recording
-                    val intent = Intent(this, RecordingService::class.java).apply {
-                        action = RecordingService.ACTION_START_RECORDING
-                        putExtra(RecordingService.EXTRA_AUDIO_ENABLED, PreferenceManager.isAudioRecordingEnabled(this@MainActivity))
-                        val quality = PreferenceManager.getVideoQuality(this@MainActivity)
-                        val qualityName = when (quality) {
-                            Quality.HD -> "HD"
-                            Quality.FHD -> "FHD"
-                            Quality.UHD -> "UHD"
-                            else -> "FHD"
-                        }
-                        putExtra(RecordingService.EXTRA_VIDEO_QUALITY, qualityName)
-                    }
-                    
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        startForegroundService(intent)
-                    } else {
-                        startService(intent)
-                    }
-                    
-                    bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
-                    android.util.Log.d("MainActivity", "Camera2 recording started")
-                } catch (e: Exception) {
-                    android.util.Log.e("MainActivity", "Error switching to background recording", e)
-                }
-            }, androidx.core.content.ContextCompat.getMainExecutor(this))
-        }, 300)
-    }
-    
-    private fun switchToForegroundRecording() {
-        android.util.Log.d("MainActivity", "Switching to foreground recording (CameraX)")
-        
-        // Stop Camera2 recording
-        val intent = Intent(this, RecordingService::class.java).apply {
-            action = RecordingService.ACTION_STOP_RECORDING
-        }
-        startService(intent)
-        
-        // Small delay to ensure Camera2 releases the camera
-        binding.viewFinder.postDelayed({
-            // Restart CameraX with preview
-            initializeCameraMode()
-            
-            // Restart CameraX recording
-            binding.viewFinder.postDelayed({
-                if (isDualCameraMode) {
-                    dualCameraManager.startDualRecording(PreferenceManager.isAudioRecordingEnabled(this))
-                } else {
-                    camera.captureVideo()
-                }
-                android.util.Log.d("MainActivity", "CameraX recording restarted")
-            }, 300)
-        }, 300)
+        android.util.Log.d("MainActivity", "onResume - isRecording: $isCurrentlyRecording")
     }
     
     private fun initializeSpeedDisplay() {
@@ -362,7 +283,8 @@ class MainActivity : AppCompatActivity() {
     }
     
     /**
-     * Start background recording using RecordingService with Camera2 API
+     * Start recording using RecordingService with Camera2 API
+     * This works both in foreground and background
      */
     private fun startBackgroundRecording() {
         // Check if already recording
@@ -376,33 +298,65 @@ class MainActivity : AppCompatActivity() {
         updateRecordButtonState(true)
         isCurrentlyRecording = true
         
-        // Use CameraX for recording while app is in foreground
-        if (isDualCameraMode) {
-            dualCameraManager.startDualRecording(PreferenceManager.isAudioRecordingEnabled(this))
-        } else {
-            camera.captureVideo()
-        }
+        android.util.Log.d("MainActivity", "Starting Camera2 recording")
         
-        // Start trip logging if enabled
-        startTripLoggingIfEnabled()
+        // Stop CameraX preview to release camera for Camera2
+        val cameraProvider = androidx.camera.lifecycle.ProcessCameraProvider.getInstance(this)
+        cameraProvider.addListener({
+            try {
+                cameraProvider.get().unbindAll()
+                android.util.Log.d("MainActivity", "CameraX unbound")
+                
+                // Hide preview - Camera2 records without preview
+                binding.viewFinder.visibility = View.GONE
+                binding.dualPreviewContainer.visibility = View.GONE
+                
+                // Start Camera2 recording service
+                val intent = Intent(this, RecordingService::class.java).apply {
+                    action = RecordingService.ACTION_START_RECORDING
+                    putExtra(RecordingService.EXTRA_AUDIO_ENABLED, PreferenceManager.isAudioRecordingEnabled(this@MainActivity))
+                    val quality = PreferenceManager.getVideoQuality(this@MainActivity)
+                    val qualityName = when (quality) {
+                        Quality.HD -> "HD"
+                        Quality.FHD -> "FHD"
+                        Quality.UHD -> "UHD"
+                        else -> "FHD"
+                    }
+                    putExtra(RecordingService.EXTRA_VIDEO_QUALITY, qualityName)
+                }
+                
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    startForegroundService(intent)
+                } else {
+                    startService(intent)
+                }
+                
+                bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
+                
+                // Start trip logging if enabled
+                startTripLoggingIfEnabled()
+                
+                android.util.Log.d("MainActivity", "Camera2 recording started")
+            } catch (e: Exception) {
+                android.util.Log.e("MainActivity", "Error starting recording", e)
+                Toast.makeText(this, "Failed to start recording", Toast.LENGTH_SHORT).show()
+                updateRecordButtonState(false)
+                isCurrentlyRecording = false
+            }
+        }, androidx.core.content.ContextCompat.getMainExecutor(this))
     }
     
     /**
-     * Stop background recording
+     * Stop recording
      */
     private fun stopBackgroundRecording() {
         if (!isCurrentlyRecording) return
         
+        android.util.Log.d("MainActivity", "Stopping Camera2 recording")
+        
         isCurrentlyRecording = false
         
-        // Stop CameraX recording if active
-        if (isDualCameraMode) {
-            dualCameraManager.stopDualRecording()
-        } else {
-            camera.captureVideo() // Toggle stops recording
-        }
-        
-        // Also stop service if it's running
+        // Stop Camera2 recording service
         val intent = Intent(this, RecordingService::class.java).apply {
             action = RecordingService.ACTION_STOP_RECORDING
         }
@@ -419,6 +373,13 @@ class MainActivity : AppCompatActivity() {
         
         // Update button to stopped state
         updateRecordButtonState(false)
+        
+        // Restart CameraX preview
+        binding.viewFinder.postDelayed({
+            if (permissionHandler.allPermissionsGranted()) {
+                initializeCameraMode()
+            }
+        }, 500)
     }
     
     /**
