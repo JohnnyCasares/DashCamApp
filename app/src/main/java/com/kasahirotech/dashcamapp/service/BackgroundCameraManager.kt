@@ -273,16 +273,20 @@ class BackgroundCameraManager(private val context: Context) {
         }
         
         try {
-            val surface = recorder.surface
+            val recorderSurface = recorder.surface
+            
+            // Only use recorder surface for background recording
+            // No preview surface to avoid lifecycle issues
+            val surfaces = listOf(recorderSurface)
             
             // Create capture request builder
             val captureRequestBuilder = camera.createCaptureRequest(CameraDevice.TEMPLATE_RECORD)
-            captureRequestBuilder.addTarget(surface)
+            captureRequestBuilder.addTarget(recorderSurface)
             
             // Create capture session
             @Suppress("DEPRECATION")
             camera.createCaptureSession(
-                listOf(surface),
+                surfaces,
                 captureSessionCallback,
                 backgroundHandler
             )
@@ -304,7 +308,7 @@ class BackgroundCameraManager(private val context: Context) {
                 val camera = cameraDevice ?: return
                 val recorder = mediaRecorder ?: return
                 
-                // Build capture request
+                // Build capture request - only recorder surface, no preview
                 val captureRequest = camera.createCaptureRequest(CameraDevice.TEMPLATE_RECORD).apply {
                     addTarget(recorder.surface)
                 }.build()
@@ -316,6 +320,9 @@ class BackgroundCameraManager(private val context: Context) {
                 startMediaRecorder()
             } catch (e: CameraAccessException) {
                 Log.e(TAG, "Failed to start capture request", e)
+                callback?.onRecordingError("Failed to start capture: ${e.message}")
+            } catch (e: IllegalStateException) {
+                Log.e(TAG, "Illegal state when starting capture", e)
                 callback?.onRecordingError("Failed to start capture: ${e.message}")
             }
         }
