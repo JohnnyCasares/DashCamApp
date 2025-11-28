@@ -73,7 +73,10 @@ class Gallery : AppCompatActivity() {
             }
         )
         binding.rvVideoGallery.adapter = adapter
-        binding.rvVideoGallery.layoutManager = GridLayoutManager(this, 3)
+        
+        // Adjust grid columns based on orientation
+        val spanCount = getGridSpanCount()
+        binding.rvVideoGallery.layoutManager = GridLayoutManager(this, spanCount)
 
         binding.fabBack.setOnClickListener {
             finish()
@@ -196,6 +199,18 @@ class Gallery : AppCompatActivity() {
         } else {
             binding.tvEmptyState.visibility = android.view.View.GONE
             binding.rvVideoGallery.visibility = android.view.View.VISIBLE
+        }
+    }
+    
+    /**
+     * Get the number of grid columns based on screen orientation
+     * Portrait: 3 columns, Landscape: 5 columns for smaller thumbnails
+     */
+    private fun getGridSpanCount(): Int {
+        return if (resources.configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE) {
+            5 // More columns in landscape for smaller thumbnails
+        } else {
+            3 // Default 3 columns in portrait
         }
     }
 }
