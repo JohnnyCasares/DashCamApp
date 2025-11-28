@@ -29,6 +29,7 @@ class RecordingService : LifecycleService() {
     companion object {
         const val ACTION_START_RECORDING = "com.kasahirotech.dashcamapp.START_RECORDING"
         const val ACTION_STOP_RECORDING = "com.kasahirotech.dashcamapp.STOP_RECORDING"
+        const val BROADCAST_RECORDING_STOPPED = "com.kasahirotech.dashcamapp.RECORDING_STOPPED"
         const val NOTIFICATION_ID = 1001
         const val CHANNEL_ID = "recording_channel"
         
@@ -41,6 +42,16 @@ class RecordingService : LifecycleService() {
         
         private const val MIN_STORAGE_BYTES = 100L * 1024 * 1024 // 100MB
         private const val STORAGE_CHECK_INTERVAL = 10000L // Check every 10 seconds
+        
+        // Static flag to track recording state across the app
+        @Volatile
+        private var isServiceRecording = false
+        
+        /**
+         * Check if the recording service is currently recording.
+         * This is a reliable way to check recording state from any component.
+         */
+        fun isRecording(): Boolean = isServiceRecording
     }
     
     private var startTime: Long = 0
@@ -65,7 +76,14 @@ class RecordingService : LifecycleService() {
     
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)
-        when (intent?.action) {
+        
+        // Handle null intent gracefully
+        if (intent == null) {
+            Log.w(TAG, "Received null intent in onStartCommand")
+            return START_STICKY
+        }
+        
+        when (intent.action) {
             ACTION_START_RECORDING -> {
                 Log.d(TAG, "Starting recording")
                 val audioEnabled = intent.getBooleanExtra(EXTRA_AUDIO_ENABLED, false)
@@ -84,10 +102,16 @@ class RecordingService : LifecycleService() {
                 Log.d(TAG, "Stopping recording via notification")
                 stopRecordingAndService()
             }
+            null -> {
+                Log.w(TAG, "Received intent with null action")
+            }
+            else -> {
+                Log.w(TAG, "Received unknown action: ${intent.action}")
+            }
         }
         return START_STICKY
     }
-
+    
     fun isRecording(): Boolean {
         return isRecording
     }
@@ -99,11 +123,13 @@ class RecordingService : LifecycleService() {
         override fun onRecordingStarted() {
             Log.d(TAG, "Recording started callback")
             isRecording = true
+            isServiceRecording = true
         }
         
         override fun onRecordingStopped(outputFile: File) {
             Log.d(TAG, "Recording stopped callback: ${outputFile.absolutePath}")
             isRecording = false
+            isServiceRecording = false
             
             // Add video to MediaStore
             addVideoToMediaStore(outputFile)
@@ -223,19 +249,33 @@ class RecordingService : LifecycleService() {
             backgroundCamera?.stopRecording()
             Log.d(TAG, "Recording stopped, camera resources released")
             
+            // Update static flag
+            isRecording = false
+            isServiceRecording = false
+            
             stopTimer()
+            
+            // Broadcast that recording has stopped so MainActivity can update UI
+            val broadcastIntent = Intent(BROADCAST_RECORDING_STOPPED)
+            sendBroadcast(broadcastIntent)
+            Log.d(TAG, "Broadcast sent: Recording stopped")
             
             stopForeground(STOP_FOREGROUND_REMOVE)
             stopSelf()
         } catch (e: Exception) {
             Log.e(TAG, "Error stopping recording", e)
+            isServiceRecording = false
             stopSelf()
         }
     }
     
     private fun startForegroundService() {
         try {
-            val notification = NotificationHelper.buildRecordingNotification(this, "00:00")
+            val notification = NotificationHelper.buildRecordingNotification(
+                this, 
+                "00:00",
+                false // Storage is checked before starting, so initially not low
+            )
             startForeground(NOTIFICATION_ID, notification)
             startTimer()
             Log.d(TAG, "Foreground service started")
@@ -295,7 +335,14 @@ class RecordingService : LifecycleService() {
         val elapsedSeconds = (elapsedMillis / 1000).toInt()
         val formattedTime = formatElapsedTime(elapsedSeconds)
         
-        val notification = NotificationHelper.buildRecordingNotification(this, formattedTime)
+        // Check if storage is low for notification warning
+        val isLowStorage = !hasEnoughStorage()
+        
+        val notification = NotificationHelper.buildRecordingNotification(
+            this, 
+            formattedTime,
+            isLowStorage
+        )
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         notificationManager.notify(NOTIFICATION_ID, notification)
     }
@@ -327,6 +374,8 @@ class RecordingService : LifecycleService() {
         }
         backgroundCamera?.release()
         backgroundCamera = null
+        isRecording = false
+        isServiceRecording = false
         super.onDestroy()
     }
     

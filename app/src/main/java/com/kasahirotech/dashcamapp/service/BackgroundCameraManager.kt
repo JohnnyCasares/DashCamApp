@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.hardware.camera2.CameraAccessException
 import android.hardware.camera2.CameraCaptureSession
+import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraDevice
 import android.hardware.camera2.CameraManager
 import android.hardware.camera2.CaptureRequest
@@ -13,6 +14,8 @@ import android.os.Build
 import android.os.Handler
 import android.os.HandlerThread
 import android.util.Log
+import android.view.Surface
+import android.view.WindowManager
 import androidx.camera.video.Quality
 import androidx.core.content.ContextCompat
 import java.io.File
@@ -222,17 +225,63 @@ class BackgroundCameraManager(private val context: Context) {
                 // Set frame rate
                 setVideoFrameRate(30)
                 
+                // Set orientation based on device rotation and camera sensor orientation
+                setOrientationHint(getVideoOrientation())
+                
                 // Prepare MediaRecorder
                 prepare()
             }
             
-            Log.d(TAG, "MediaRecorder setup complete")
+            Log.d(TAG, "MediaRecorder setup complete with orientation: ${getVideoOrientation()}")
         } catch (e: IOException) {
             Log.e(TAG, "Failed to setup MediaRecorder", e)
             throw e
         } catch (e: IllegalStateException) {
             Log.e(TAG, "MediaRecorder in illegal state", e)
             throw e
+        }
+    }
+    
+    /**
+     * Calculate the correct video orientation based on device rotation and camera sensor orientation
+     */
+    private fun getVideoOrientation(): Int {
+        val manager = context.getSystemService(Context.CAMERA_SERVICE) as CameraManager
+        
+        try {
+            // Get camera characteristics
+            val characteristics = manager.getCameraCharacteristics(CAMERA_ID)
+            val sensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION) ?: 0
+            
+            // Get device rotation
+            val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
+            val deviceRotation = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                context.display?.rotation ?: Surface.ROTATION_0
+            } else {
+                @Suppress("DEPRECATION")
+                windowManager.defaultDisplay.rotation
+            }
+            
+            // Convert device rotation to degrees
+            val deviceDegrees = when (deviceRotation) {
+                Surface.ROTATION_0 -> 0
+                Surface.ROTATION_90 -> 90
+                Surface.ROTATION_180 -> 180
+                Surface.ROTATION_270 -> 270
+                else -> 0
+            }
+            
+            // Calculate orientation
+            // For back camera: orientation = (sensorOrientation - deviceDegrees + 360) % 360
+            val orientation = (sensorOrientation - deviceDegrees + 360) % 360
+            
+            Log.d(TAG, "Sensor orientation: $sensorOrientation, Device rotation: $deviceDegrees degrees, Final orientation: $orientation")
+            
+            return orientation
+        } catch (e: Exception) {
+            Log.e(TAG, "Error calculating video orientation", e)
+            // Default to 90 degrees for back camera in portrait mode
+            return 90
         }
     }
     

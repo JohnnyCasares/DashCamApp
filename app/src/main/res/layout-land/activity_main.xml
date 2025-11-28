@@ -15,21 +15,22 @@
         style="@style/Widget.App.ImageButton"
         android:layout_width="70dp"
         android:layout_height="70dp"
-        android:layout_marginTop="16dp"
-        android:src="@drawable/ic_settings_material"
+        android:layout_marginBottom="24dp"
         android:elevation="8dp"
+        android:src="@drawable/ic_settings_material"
         app:layout_constraintBottom_toTopOf="@+id/imgBtnGallery"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_chainStyle="packed" />
+        app:layout_constraintVertical_chainStyle="spread" />
 
     <ImageButton
         android:id="@+id/imgBtnGallery"
         style="@style/Widget.App.ImageButton"
         android:layout_width="70dp"
         android:layout_height="70dp"
-        android:src="@drawable/ic_gallery_material"
+        android:layout_marginBottom="24dp"
         android:elevation="8dp"
+        android:src="@drawable/ic_gallery_material"
         app:layout_constraintBottom_toTopOf="@+id/btnRecordAndStop"
         app:layout_constraintStart_toStartOf="@+id/btnSettings"
         app:layout_constraintTop_toBottomOf="@+id/btnSettings" />
@@ -40,8 +41,8 @@
         android:layout_height="70dp"
         android:background="@drawable/bg_record_button"
         android:clickable="true"
-        android:focusable="true"
         android:elevation="8dp"
+        android:focusable="true"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="@+id/imgBtnGallery"
         app:layout_constraintTop_toBottomOf="@+id/imgBtnGallery" />

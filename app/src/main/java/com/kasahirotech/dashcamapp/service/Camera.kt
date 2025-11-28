@@ -414,7 +414,7 @@ class Camera
                 if (it.moveToFirst()) {
                     val columnIndex = it.getColumnIndex(MediaStore.Video.Media.DATA)
                     if (columnIndex >= 0) {
-                        it.getString(columnIndex)
+                        it?.getString(columnIndex)
                     } else {
                         null
                     }

@@ -77,6 +77,9 @@ dependencies {
     // Security for encrypted preferences
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
     implementation(libs.androidx.lifecycle.service)
+    
+    // MediaStyle notification support
+    implementation("androidx.media:media:1.7.0")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

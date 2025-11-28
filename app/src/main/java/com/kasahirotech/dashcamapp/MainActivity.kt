@@ -1,8 +1,10 @@
 package com.kasahirotech.dashcamapp
 
+import android.content.BroadcastReceiver
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.ServiceConnection
 import android.os.Build
 import android.os.Bundle
@@ -37,6 +39,18 @@ class MainActivity : AppCompatActivity() {
 
     private var isDualCameraMode = false
     private var isCurrentlyRecording = false
+    
+    /**
+     * Broadcast receiver to listen for recording stopped events from RecordingService
+     */
+    private val recordingStoppedReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (intent?.action == RecordingService.BROADCAST_RECORDING_STOPPED) {
+                android.util.Log.d("MainActivity", "Received broadcast: Recording stopped")
+                handleRecordingStopped()
+            }
+        }
+    }
 
     private enum class PermissionRequestContext {
         STARTUP,
@@ -176,12 +190,30 @@ class MainActivity : AppCompatActivity() {
     override fun onPause() {
         super.onPause()
         speedTracker?.stopTracking()
+        
+        // Unregister broadcast receiver
+        try {
+            unregisterReceiver(recordingStoppedReceiver)
+            android.util.Log.d("MainActivity", "Broadcast receiver unregistered")
+        } catch (e: IllegalArgumentException) {
+            // Receiver was not registered, ignore
+            android.util.Log.d("MainActivity", "Receiver was not registered")
+        }
+        
         // Recording continues in background via Camera2 service - no action needed
         android.util.Log.d("MainActivity", "onPause - recording continues in background")
     }
     
     override fun onResume() {
         super.onResume()
+        
+        // Register broadcast receiver for recording stopped events
+        val filter = IntentFilter(RecordingService.BROADCAST_RECORDING_STOPPED)
+        registerReceiver(recordingStoppedReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
+        android.util.Log.d("MainActivity", "Broadcast receiver registered")
+        
+        // Sync recording state with service
+        syncRecordingState()
         
         // Restart CameraX preview only if NOT recording
         if (permissionHandler.allPermissionsGranted() && !isCurrentlyRecording) {
@@ -380,6 +412,76 @@ class MainActivity : AppCompatActivity() {
                 initializeCameraMode()
             }
         }, 500)
+    }
+    
+    /**
+     * Handle recording stopped event from RecordingService broadcast.
+     * This is called when recording is stopped from the notification.
+     */
+    private fun handleRecordingStopped() {
+        android.util.Log.d("MainActivity", "Handling recording stopped from notification")
+        
+        // Update recording state
+        isCurrentlyRecording = false
+        
+        // Unbind from service if bound
+        if (serviceBound) {
+            try {
+                unbindService(serviceConnection)
+                serviceBound = false
+            } catch (e: Exception) {
+                android.util.Log.e("MainActivity", "Error unbinding service", e)
+            }
+        }
+        
+        // Stop trip logging
+        stopTripLogging()
+        
+        // Update button to stopped state
+        updateRecordButtonState(false)
+        
+        // Restart CameraX preview
+        binding.viewFinder.postDelayed({
+            if (permissionHandler.allPermissionsGranted()) {
+                initializeCameraMode()
+            }
+        }, 500)
+    }
+    
+    /**
+     * Sync recording state with the actual service state.
+     * This is called when the activity resumes to ensure UI matches reality.
+     * Handles the case where recording was stopped while the app was minimized.
+     */
+    private fun syncRecordingState() {
+        val serviceRecording = RecordingService.isRecording()
+        android.util.Log.d("MainActivity", "Syncing state - Service recording: $serviceRecording, Local state: $isCurrentlyRecording")
+        
+        if (!serviceRecording && isCurrentlyRecording) {
+            // Service stopped while app was minimized
+            android.util.Log.d("MainActivity", "Service stopped while minimized, updating UI")
+            isCurrentlyRecording = false
+            updateRecordButtonState(false)
+            
+            // Unbind from service if still bound
+            if (serviceBound) {
+                try {
+                    unbindService(serviceConnection)
+                    serviceBound = false
+                } catch (e: Exception) {
+                    android.util.Log.e("MainActivity", "Error unbinding service during sync", e)
+                }
+            }
+        } else if (serviceRecording && !isCurrentlyRecording) {
+            // Service is running but local state says it's not (shouldn't happen, but handle it)
+            android.util.Log.d("MainActivity", "Service recording but local state incorrect, updating UI")
+            isCurrentlyRecording = true
+            updateRecordButtonState(true)
+            
+            // Try to bind to the service
+            val intent = Intent(this, RecordingService::class.java)
+            bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
+        }
     }
     
     /**
