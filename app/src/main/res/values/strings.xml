@@ -24,4 +24,33 @@
     <string name="google_drive_auth_failed">Authentication failed. Please try again.</string>
     <string name="google_drive_upload_success">Upload completed successfully</string>
     <string name="google_drive_upload_failed">Upload failed: %s</string>
+    
+    <!-- Camera Configuration -->
+    <string name="camera_config_title">Camera Configuration</string>
+    <string name="camera_config_setting_title">Camera &amp; Zoom</string>
+    <string name="camera_config_select_camera">Select Camera</string>
+    <string name="camera_config_save">Save</string>
+    <string name="camera_config_cancel">Cancel</string>
+    <string name="camera_config_saved">Configuration saved</string>
+    <string name="camera_config_error">Error saving configuration</string>
+    <string name="camera_config_no_cameras">No cameras found</string>
+    <string name="camera_config_error_loading">Error loading cameras</string>
+    <string name="camera_config_recording_in_progress">Cannot configure camera while recording</string>
+    <string name="camera_config_no_zoom_support">This camera does not support zoom</string>
+    <string name="camera_config_zoom_format">%.1fx</string>
+    <string name="camera_config_default">Default camera • 1.0x zoom</string>
+    <string name="camera_config_current" formatted="false">Camera %s • %.1fx zoom</string>
+    
+    <!-- Camera Types -->
+    <string name="camera_type_ultra_wide">Ultra-Wide</string>
+    <string name="camera_type_wide">Wide</string>
+    <string name="camera_type_standard">Standard</string>
+    <string name="camera_type_telephoto">Telephoto</string>
+    <string name="camera_zoom_range" formatted="false">Zoom: %.1fx - %.1fx</string>
+    <string name="camera_no_zoom">No zoom support</string>
+    
+    <!-- Content Descriptions for Accessibility -->
+    <string name="camera_preview_description">Camera preview showing current view</string>
+    <string name="zoom_indicator_description">Current zoom level indicator</string>
+    <string name="camera_item_description">Camera option: %s</string>
 </resources>

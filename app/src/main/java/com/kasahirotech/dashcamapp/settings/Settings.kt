@@ -9,6 +9,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.kasahirotech.dashcamapp.databinding.ActivitySettingsBinding
 import com.kasahirotech.dashcamapp.interfaces.SettingItem
 import com.kasahirotech.dashcamapp.settings.items.AudioToggleSetting
+import com.kasahirotech.dashcamapp.settings.items.CameraConfigSetting
 import com.kasahirotech.dashcamapp.settings.items.DualCameraToggleSetting
 import com.kasahirotech.dashcamapp.settings.items.GoogleDriveSetting
 import com.kasahirotech.dashcamapp.settings.items.SpeedDisplayToggleSetting
@@ -48,6 +49,10 @@ class Settings : AppCompatActivity() {
             // Callback when quality changes - refresh the adapter
             adapter.notifyDataSetChanged()
         }
+        val cameraConfigSetting = CameraConfigSetting(this) {
+            // Callback when camera config changes - refresh the adapter
+            adapter.notifyDataSetChanged()
+        }
         val speedDisplayToggle = SpeedDisplayToggleSetting(this) {
             // Callback when speed display toggle changes - refresh the adapter
             adapter.notifyDataSetChanged()
@@ -65,6 +70,7 @@ class Settings : AppCompatActivity() {
             audioToggle,
             dualCameraToggle,
             videoQualitySetting,
+            cameraConfigSetting,
             speedDisplayToggle,
             speedUnitSetting,
             tripLogToggle,

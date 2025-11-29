@@ -39,6 +39,13 @@ object PreferenceManager : PreferenceService {
     private const val KEY_GOOGLE_DRIVE_FOLDER_ID = "google_drive_folder_id"
     private const val DEFAULT_GOOGLE_DRIVE_FOLDER_ID = ""
     
+    // Camera Selection and Zoom Settings
+    private const val KEY_SELECTED_CAMERA_ID = "selected_camera_id"
+    private const val DEFAULT_SELECTED_CAMERA_ID = ""
+    private const val KEY_ZOOM_RATIO_PREFIX = "zoom_ratio_"
+    private const val DEFAULT_ZOOM_RATIO = 1.0f
+    private const val KEY_DEFAULT_ZOOM_RATIO = "default_zoom_ratio"
+    
     private const val TAG = "PreferenceManager"
     
     /**
@@ -383,6 +390,105 @@ object PreferenceManager : PreferenceService {
             prefs.edit().putString(KEY_GOOGLE_DRIVE_FOLDER_ID, folderId).apply()
         } catch (e: Exception) {
             Log.e(TAG, "Error writing Google Drive folder ID preference", e)
+        }
+    }
+    
+    // Camera Selection and Zoom Settings Implementation
+    
+    /**
+     * Gets the selected camera ID from user preferences.
+     * 
+     * @param context Application or Activity context
+     * @return Camera ID string, or empty string if not set
+     */
+    override fun getSelectedCameraId(context: Context): String {
+        return try {
+            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            prefs.getString(KEY_SELECTED_CAMERA_ID, DEFAULT_SELECTED_CAMERA_ID) ?: DEFAULT_SELECTED_CAMERA_ID
+        } catch (e: Exception) {
+            Log.e(TAG, "Error reading selected camera ID preference", e)
+            DEFAULT_SELECTED_CAMERA_ID
+        }
+    }
+    
+    /**
+     * Sets the selected camera ID preference.
+     * 
+     * @param context Application or Activity context
+     * @param cameraId Camera ID string to store
+     */
+    override fun setSelectedCameraId(context: Context, cameraId: String) {
+        try {
+            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            prefs.edit().putString(KEY_SELECTED_CAMERA_ID, cameraId).apply()
+        } catch (e: Exception) {
+            Log.e(TAG, "Error writing selected camera ID preference", e)
+        }
+    }
+    
+    /**
+     * Gets the zoom ratio for a specific camera from user preferences.
+     * 
+     * @param context Application or Activity context
+     * @param cameraId Camera ID to get zoom ratio for
+     * @return Zoom ratio value, or 1.0 if not set
+     */
+    override fun getZoomRatio(context: Context, cameraId: String): Float {
+        return try {
+            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            val key = KEY_ZOOM_RATIO_PREFIX + cameraId
+            prefs.getFloat(key, DEFAULT_ZOOM_RATIO)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error reading zoom ratio preference for camera $cameraId", e)
+            DEFAULT_ZOOM_RATIO
+        }
+    }
+    
+    /**
+     * Sets the zoom ratio for a specific camera.
+     * 
+     * @param context Application or Activity context
+     * @param cameraId Camera ID to set zoom ratio for
+     * @param ratio Zoom ratio value to store
+     */
+    override fun setZoomRatio(context: Context, cameraId: String, ratio: Float) {
+        try {
+            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            val key = KEY_ZOOM_RATIO_PREFIX + cameraId
+            prefs.edit().putFloat(key, ratio).apply()
+        } catch (e: Exception) {
+            Log.e(TAG, "Error writing zoom ratio preference for camera $cameraId", e)
+        }
+    }
+    
+    /**
+     * Gets the default zoom ratio for new cameras.
+     * 
+     * @param context Application or Activity context
+     * @return Default zoom ratio value
+     */
+    override fun getDefaultZoomRatio(context: Context): Float {
+        return try {
+            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            prefs.getFloat(KEY_DEFAULT_ZOOM_RATIO, DEFAULT_ZOOM_RATIO)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error reading default zoom ratio preference", e)
+            DEFAULT_ZOOM_RATIO
+        }
+    }
+    
+    /**
+     * Sets the default zoom ratio for new cameras.
+     * 
+     * @param context Application or Activity context
+     * @param ratio Default zoom ratio value to store
+     */
+    override fun setDefaultZoomRatio(context: Context, ratio: Float) {
+        try {
+            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            prefs.edit().putFloat(KEY_DEFAULT_ZOOM_RATIO, ratio).apply()
+        } catch (e: Exception) {
+            Log.e(TAG, "Error writing default zoom ratio preference", e)
         }
     }
 }

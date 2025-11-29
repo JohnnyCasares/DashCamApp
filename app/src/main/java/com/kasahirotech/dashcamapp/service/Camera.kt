@@ -45,46 +45,21 @@ class Camera
     
     private var dualCameraManager: DualCameraManager? = null
     private var isDualModeEnabled: Boolean = false
+    
+    // Camera selection and zoom fields
+    private var currentCameraId: String = "0"
+    private var currentCameraInfo: com.kasahirotech.dashcamapp.models.CameraInfo? = null
+    private val zoomController: ZoomController = ZoomController()
+    private var cameraControl: androidx.camera.core.CameraControl? = null
 
 
     override fun startCamera() {
-// The ProcessCameraProvider instance is bound to the parent this. Binds the lifecycle of the camera to the owner
-        val cameraProviderFuture = ProcessCameraProvider.getInstance(activity)
-
-        cameraProviderFuture.addListener({
-            //Preview
-            val preview = Preview.Builder().build().also {
-                it.surfaceProvider = surfaceProvider
-            }
-            imageCapture = ImageCapture.Builder().build()
-
-            val selectedQuality = PreferenceManager.getVideoQuality(activity)
-            val recorder =
-                Recorder.Builder().setQualitySelector(QualitySelector.from(selectedQuality)).build()
-            videoCapture = VideoCapture.withOutput(recorder)
-
-            //Select back camera as a default
-            val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
-
-            try {
-                //Used to bind the lifecycle of cameras to the lifecycle owner
-                val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
-                //Unbind use case to camera
-                cameraProvider.unbindAll()
-
-
-                cameraProvider.bindToLifecycle(
-                    activity, cameraSelector, preview, videoCapture
-                )
-                
-                cameraStarted = true
-
-            } catch (exc: Exception) {
-                Log.e(TAG, " Failed to get camera provider or binding use cases", exc)
-                cameraStarted = false
-            }
-            //ContextCompat.getMainExecutor() as the second argument. This returns an Executor that runs on the main thread.
-        }, ContextCompat.getMainExecutor(activity))
+        // Load saved camera ID from preferences
+        val savedCameraId = PreferenceManager.getSelectedCameraId(activity)
+        currentCameraId = if (savedCameraId.isNotEmpty()) savedCameraId else "0"
+        
+        // Start camera with saved or default ID
+        startCameraWithId(currentCameraId)
     }
 
     override fun captureVideo() {
@@ -425,6 +400,166 @@ class Camera
         } catch (e: Exception) {
             Log.e(TAG, "Error getting file path from URI", e)
             null
+        }
+    }
+
+    // Camera selection methods
+    
+    /**
+     * Switches to a different camera by ID.
+     * 
+     * @param cameraId Camera ID to switch to
+     * @return true if switch was successful, false otherwise
+     */
+    override fun switchCamera(cameraId: String): Boolean {
+        return try {
+            currentCameraId = cameraId
+            
+            // Save selected camera to preferences
+            PreferenceManager.setSelectedCameraId(activity, cameraId)
+            
+            // Restart camera with new ID
+            startCameraWithId(cameraId)
+            
+            Log.d(TAG, "Switched to camera: $cameraId")
+            true
+        } catch (e: Exception) {
+            Log.e(TAG, "Error switching camera", e)
+            false
+        }
+    }
+    
+    /**
+     * Gets the current camera ID.
+     * 
+     * @return Current camera ID string
+     */
+    override fun getCurrentCameraId(): String {
+        return currentCameraId
+    }
+    
+    /**
+     * Gets information about the current camera.
+     * 
+     * @return CameraInfo object or null if not available
+     */
+    override fun getCameraInfo(): com.kasahirotech.dashcamapp.models.CameraInfo? {
+        return currentCameraInfo
+    }
+    
+    // Zoom control methods
+    
+    /**
+     * Sets the zoom ratio.
+     * 
+     * @param ratio Desired zoom ratio
+     * @return true if zoom was applied successfully, false otherwise
+     */
+    override fun setZoomRatio(ratio: Float): Boolean {
+        val success = zoomController.setZoomRatio(ratio)
+        if (success) {
+            // Save zoom ratio for current camera
+            PreferenceManager.setZoomRatio(activity, currentCameraId, ratio)
+        }
+        return success
+    }
+    
+    /**
+     * Gets the current zoom ratio.
+     * 
+     * @return Current zoom ratio value
+     */
+    override fun getZoomRatio(): Float {
+        return zoomController.getZoomRatio()
+    }
+    
+    /**
+     * Gets the zoom range for the current camera.
+     * 
+     * @return Pair of (minZoom, maxZoom)
+     */
+    override fun getZoomRange(): Pair<Float, Float> {
+        return Pair(zoomController.getMinZoomRatio(), zoomController.getMaxZoomRatio())
+    }
+    
+    /**
+     * Starts camera with a specific camera ID.
+     * Loads and applies saved zoom ratio for the camera.
+     */
+    private fun startCameraWithId(cameraId: String) {
+        val cameraProviderFuture = ProcessCameraProvider.getInstance(activity)
+
+        cameraProviderFuture.addListener({
+            val preview = Preview.Builder().build().also {
+                it.surfaceProvider = surfaceProvider
+            }
+            imageCapture = ImageCapture.Builder().build()
+
+            val selectedQuality = PreferenceManager.getVideoQuality(activity)
+            val recorder =
+                Recorder.Builder().setQualitySelector(QualitySelector.from(selectedQuality)).build()
+            videoCapture = VideoCapture.withOutput(recorder)
+
+            // Build camera selector based on camera ID
+            val cameraSelector = buildCameraSelectorForId(cameraId)
+
+            try {
+                val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
+                cameraProvider.unbindAll()
+
+                val camera = cameraProvider.bindToLifecycle(
+                    activity, cameraSelector, preview, videoCapture
+                )
+                
+                // Store camera control for zoom operations
+                cameraControl = camera.cameraControl
+                
+                // Initialize zoom controller with camera
+                zoomController.setCamera(camera.cameraControl, camera.cameraInfo)
+                
+                // Load and apply saved zoom ratio for this camera
+                val savedZoom = PreferenceManager.getZoomRatio(activity, cameraId)
+                if (savedZoom != 1.0f) {
+                    zoomController.setZoomRatio(savedZoom)
+                }
+                
+                cameraStarted = true
+                Log.d(TAG, "Camera started with ID: $cameraId, zoom: $savedZoom")
+
+            } catch (exc: Exception) {
+                Log.e(TAG, "Failed to start camera with ID: $cameraId", exc)
+                cameraStarted = false
+                
+                // Try fallback to default camera
+                if (cameraId != "0") {
+                    Log.w(TAG, "Falling back to default camera")
+                    currentCameraId = "0"
+                    PreferenceManager.setSelectedCameraId(activity, "0")
+                    startCameraWithId("0")
+                }
+            }
+        }, ContextCompat.getMainExecutor(activity))
+    }
+    
+    /**
+     * Builds a CameraSelector for a specific camera ID.
+     */
+    private fun buildCameraSelectorForId(cameraId: String): CameraSelector {
+        return try {
+            // For camera ID "0", use default back camera
+            if (cameraId == "0") {
+                CameraSelector.DEFAULT_BACK_CAMERA
+            } else {
+                // Build selector by filtering available cameras
+                CameraSelector.Builder()
+                    .addCameraFilter { cameraInfos ->
+                        cameraInfos.filterIndexed { index, _ -> index.toString() == cameraId }
+                    }
+                    .build()
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error building camera selector for ID: $cameraId", e)
+            CameraSelector.DEFAULT_BACK_CAMERA
         }
     }
 

@@ -187,4 +187,56 @@ interface PreferenceService {
      * @param enabled true to delete local files after upload, false to keep them
      */
     fun setDeleteLocalAfterUpload(context: Context, enabled: Boolean)
+    
+    // Camera Selection and Zoom Settings
+    
+    /**
+     * Gets the selected camera ID from user preferences.
+     * 
+     * @param context Application or Activity context
+     * @return Camera ID string, or empty string if not set
+     */
+    fun getSelectedCameraId(context: Context): String
+    
+    /**
+     * Sets the selected camera ID preference.
+     * 
+     * @param context Application or Activity context
+     * @param cameraId Camera ID string to store
+     */
+    fun setSelectedCameraId(context: Context, cameraId: String)
+    
+    /**
+     * Gets the zoom ratio for a specific camera from user preferences.
+     * 
+     * @param context Application or Activity context
+     * @param cameraId Camera ID to get zoom ratio for
+     * @return Zoom ratio value, or 1.0 if not set
+     */
+    fun getZoomRatio(context: Context, cameraId: String): Float
+    
+    /**
+     * Sets the zoom ratio for a specific camera.
+     * 
+     * @param context Application or Activity context
+     * @param cameraId Camera ID to set zoom ratio for
+     * @param ratio Zoom ratio value to store
+     */
+    fun setZoomRatio(context: Context, cameraId: String, ratio: Float)
+    
+    /**
+     * Gets the default zoom ratio for new cameras.
+     * 
+     * @param context Application or Activity context
+     * @return Default zoom ratio value
+     */
+    fun getDefaultZoomRatio(context: Context): Float
+    
+    /**
+     * Sets the default zoom ratio for new cameras.
+     * 
+     * @param context Application or Activity context
+     * @param ratio Default zoom ratio value to store
+     */
+    fun setDefaultZoomRatio(context: Context, ratio: Float)
 }
