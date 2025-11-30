@@ -1,6 +1,8 @@
 package com.kasahirotech.dashcamapp.service
 
 import android.content.Context
+import android.hardware.camera2.CameraCharacteristics
+import android.hardware.camera2.CameraManager
 import android.util.Log
 import androidx.camera.core.CameraSelector
 import androidx.camera.lifecycle.ProcessCameraProvider
@@ -31,6 +33,9 @@ class CameraEnumerator : CameraEnumeratorService {
      */
     override suspend fun getCameraList(context: Context): List<CameraInfo> = withContext(Dispatchers.Main) {
         try {
+            // First, log Camera2 API information for debugging
+            logCamera2Info(context)
+            
             val cameraProvider = suspendCoroutine<ProcessCameraProvider> { continuation ->
                 val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
                 cameraProviderFuture.addListener({
@@ -41,7 +46,7 @@ class CameraEnumerator : CameraEnumeratorService {
             val cameraInfoList = mutableListOf<CameraInfo>()
             val availableCameraInfos = cameraProvider.availableCameraInfos
             
-            Log.d(TAG, "Found ${availableCameraInfos.size} cameras")
+            Log.d(TAG, "Found ${availableCameraInfos.size} CameraX cameras")
             
             availableCameraInfos.forEachIndexed { index, cameraInfo ->
                 try {
@@ -71,7 +76,15 @@ class CameraEnumerator : CameraEnumeratorService {
                     )
                     
                     cameraInfoList.add(info)
-                    Log.d(TAG, "Camera $cameraId: $displayName, zoom: $minZoom-$maxZoom")
+                    Log.d(TAG, "Camera $cameraId: $displayName, zoom: ${minZoom}x-${maxZoom}x, FOV: $fovType")
+                    
+                    // Log additional camera characteristics for debugging
+                    try {
+                        val intrinsicZoomRatio = cameraInfo.intrinsicZoomRatio
+                        Log.d(TAG, "  Intrinsic zoom ratio: $intrinsicZoomRatio")
+                    } catch (e: Exception) {
+                        Log.d(TAG, "  Intrinsic zoom ratio not available")
+                    }
                 } catch (e: Exception) {
                     Log.e(TAG, "Error processing camera at index $index", e)
                 }
@@ -81,6 +94,64 @@ class CameraEnumerator : CameraEnumeratorService {
         } catch (e: Exception) {
             Log.e(TAG, "Error enumerating cameras", e)
             emptyList()
+        }
+    }
+    
+    /**
+     * Logs Camera2 API information for debugging physical camera capabilities.
+     * This helps understand what cameras are available at the hardware level.
+     */
+    private fun logCamera2Info(context: Context) {
+        try {
+            val cameraManager = context.getSystemService(Context.CAMERA_SERVICE) as CameraManager
+            val cameraIds = cameraManager.cameraIdList
+            
+            Log.d(TAG, "=== Camera2 API Info ===")
+            Log.d(TAG, "Found ${cameraIds.size} Camera2 cameras")
+            
+            cameraIds.forEach { cameraId ->
+                try {
+                    val characteristics = cameraManager.getCameraCharacteristics(cameraId)
+                    val facing = characteristics.get(CameraCharacteristics.LENS_FACING)
+                    val facingStr = when (facing) {
+                        CameraCharacteristics.LENS_FACING_BACK -> "BACK"
+                        CameraCharacteristics.LENS_FACING_FRONT -> "FRONT"
+                        CameraCharacteristics.LENS_FACING_EXTERNAL -> "EXTERNAL"
+                        else -> "UNKNOWN"
+                    }
+                    
+                    // Get zoom ratio range if available (API 30+)
+                    val zoomRatioRange = try {
+                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+                            characteristics.get(CameraCharacteristics.CONTROL_ZOOM_RATIO_RANGE)
+                        } else {
+                            null
+                        }
+                    } catch (e: Exception) {
+                        null
+                    }
+                    
+                    // Get physical camera IDs if this is a logical camera
+                    val physicalCameraIds = try {
+                        characteristics.physicalCameraIds
+                    } catch (e: Exception) {
+                        emptySet()
+                    }
+                    
+                    Log.d(TAG, "Camera2 ID: $cameraId, Facing: $facingStr")
+                    if (zoomRatioRange != null) {
+                        Log.d(TAG, "  Zoom range: ${zoomRatioRange.lower}x - ${zoomRatioRange.upper}x")
+                    }
+                    if (physicalCameraIds.isNotEmpty()) {
+                        Log.d(TAG, "  Physical cameras: ${physicalCameraIds.joinToString()}")
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error reading Camera2 characteristics for ID: $cameraId", e)
+                }
+            }
+            Log.d(TAG, "=== End Camera2 Info ===")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error accessing Camera2 API", e)
         }
     }
     
@@ -147,8 +218,8 @@ class CameraEnumerator : CameraEnumeratorService {
      */
     private fun determineFieldOfViewType(minZoom: Float, maxZoom: Float, lensFacing: Int): FieldOfViewType {
         return when {
-            // Ultra-wide cameras typically have min zoom < 1.0 or very wide max zoom
-            minZoom < 0.6f -> FieldOfViewType.ULTRA_WIDE
+            // Ultra-wide cameras typically have min zoom < 1.0 (includes 0.6x, 0.7x cameras)
+            minZoom < 0.95f -> FieldOfViewType.ULTRA_WIDE
             // Telephoto cameras typically have min zoom > 1.0
             minZoom > 1.5f -> FieldOfViewType.TELEPHOTO
             // Wide cameras have good zoom range

@@ -1,0 +1,17 @@
+{
+  "enabled": true,
+  "name": "Code Quality Analyzer",
+  "description": "Monitors source code files for changes and provides suggestions for code quality improvements including code smells, design patterns, best practices, readability, maintainability, and performance optimizations",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "**/*.kt",
+      "**/*.java"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Analyze the modified code in the changed file for potential improvements. Focus on:\n\n1. **Code Smells**: Identify any code smells such as long methods, large classes, duplicate code, excessive parameters, or inappropriate intimacy between classes.\n\n2. **Design Patterns**: Suggest applicable design patterns that could improve the code structure (e.g., Strategy, Factory, Observer, Repository, etc.).\n\n3. **Best Practices**: Check adherence to Kotlin/Android best practices including:\n   - Proper use of nullable types and null safety\n   - Coroutine usage and lifecycle awareness\n   - Resource management and memory leaks\n   - Proper use of AndroidX components\n   - SOLID principles compliance\n\n4. **Readability**: Suggest improvements for:\n   - Naming conventions\n   - Code organization and structure\n   - Comment quality and documentation\n   - Function/method complexity\n\n5. **Maintainability**: Evaluate:\n   - Code coupling and cohesion\n   - Testability of the code\n   - Separation of concerns\n   - Interface usage vs concrete implementations\n\n6. **Performance**: Identify potential performance issues:\n   - Inefficient algorithms or data structures\n   - Unnecessary object creation\n   - Main thread blocking operations\n   - Memory allocation patterns\n\nProvide specific, actionable suggestions while maintaining the existing functionality. Prioritize the most impactful improvements."
+  }
+}
