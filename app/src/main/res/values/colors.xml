@@ -3,15 +3,16 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 
-    <color name="md_theme_background">#121212</color>
-    <color name="md_theme_onBackground">#E0E0E0</color>
-    <color name="md_theme_surface">#1E1E1E</color>
-    <color name="md_theme_onSurface">#E0E0E0</color>
-    <color name="md_theme_surfaceVariant">#303030</color>
-    <color name="md_theme_onSurfaceVariant">#BDBDBD</color>
-    <color name="md_theme_primary">#BDBDBD</color>
-    <color name="md_theme_onPrimary">#121212</color>
-    <color name="md_theme_secondary">#9E9E9E</color>
-    <color name="md_theme_onSecondary">#121212</color>
-    <color name="md_theme_outline">#616161</color>
+    <!-- Light Mode Colors -->
+    <color name="md_theme_background">#FAFAFA</color>
+    <color name="md_theme_onBackground">#1C1B1F</color>
+    <color name="md_theme_surface">#FFFFFF</color>
+    <color name="md_theme_onSurface">#1C1B1F</color>
+    <color name="md_theme_surfaceVariant">#E7E0EC</color>
+    <color name="md_theme_onSurfaceVariant">#49454F</color>
+    <color name="md_theme_primary">#424242</color>
+    <color name="md_theme_onPrimary">#FFFFFF</color>
+    <color name="md_theme_secondary">#616161</color>
+    <color name="md_theme_onSecondary">#FFFFFF</color>
+    <color name="md_theme_outline">#79747E</color>
 </resources>
