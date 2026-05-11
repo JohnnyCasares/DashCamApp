@@ -8,7 +8,6 @@ import com.kasahirotech.dashcamapp.databinding.ItemSettingToggleBinding
 import com.kasahirotech.dashcamapp.interfaces.SettingItem
 import com.kasahirotech.dashcamapp.settings.items.AudioToggleSetting
 import com.kasahirotech.dashcamapp.settings.items.DualCameraToggleSetting
-import com.kasahirotech.dashcamapp.settings.items.GoogleDriveSetting
 import com.kasahirotech.dashcamapp.settings.items.SpeedDisplayToggleSetting
 import com.kasahirotech.dashcamapp.settings.items.SpeedUnitSetting
 import com.kasahirotech.dashcamapp.settings.items.TripLogToggleSetting
@@ -118,12 +117,12 @@ class SettingsAdapter(
                         onItemClicked(setting)
                     }
                 }
-                is GoogleDriveSetting -> {
-                    binding.switchToggle.isChecked = setting.isEnabled
-                    binding.switchToggle.isEnabled = false
-                    binding.root.alpha = 0.5f
-                    binding.switchToggle.setOnCheckedChangeListener(null)
-                }
+//                is GoogleDriveSetting -> {
+//                    binding.switchToggle.isChecked = setting.isEnabled
+//                    binding.switchToggle.isEnabled = false
+//                    binding.root.alpha = 0.5f
+//                    binding.switchToggle.setOnCheckedChangeListener(null)
+//                }
             }
         }
     }
@@ -133,8 +132,7 @@ class SettingsAdapter(
             is AudioToggleSetting,
             is DualCameraToggleSetting,
             is SpeedDisplayToggleSetting,
-            is TripLogToggleSetting,
-            is GoogleDriveSetting -> VIEW_TYPE_TOGGLE
+            is TripLogToggleSetting -> VIEW_TYPE_TOGGLE
             else -> VIEW_TYPE_CLICK
         }
     }

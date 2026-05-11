@@ -351,16 +351,16 @@ class Camera
     private fun handleAutoUpload(videoUri: String) {
         try {
             // Check if auto-upload is enabled
-            if (!PreferenceManager.isAutoUploadEnabled(activity)) {
-                Log.d(TAG, "Auto-upload disabled, skipping")
-                return
-            }
-            
-            // Check if authenticated with Google Drive
-            if (!GoogleDriveManager.isAuthenticated(activity)) {
-                Log.d(TAG, "Not authenticated with Google Drive, skipping auto-upload")
-                return
-            }
+//            if (!PreferenceManager.isAutoUploadEnabled(activity)) {
+//                Log.d(TAG, "Auto-upload disabled, skipping")
+//                return
+//            }
+//
+//            // Check if authenticated with Google Drive
+//            if (!GoogleDriveManager.isAuthenticated(activity)) {
+//                Log.d(TAG, "Not authenticated with Google Drive, skipping auto-upload")
+//                return
+//            }
             
             // Convert URI to file path
             val videoPath = getFilePathFromUri(videoUri)
@@ -370,8 +370,8 @@ class Camera
             }
             
             // Add to upload queue
-            UploadQueueManager.addToQueue(activity, videoPath)
-            Log.d(TAG, "Added video to upload queue: $videoPath")
+//            UploadQueueManager.addToQueue(activity, videoPath)
+//            Log.d(TAG, "Added video to upload queue: $videoPath")
             
         } catch (e: Exception) {
             Log.e(TAG, "Error handling auto-upload", e)

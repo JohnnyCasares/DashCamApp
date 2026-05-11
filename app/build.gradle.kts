@@ -37,9 +37,6 @@ android {
         viewBinding = true
     }
 
-    packaging {
-        resources.excludes.add("META-INF/DEPENDENCIES")
-    }
 }
 
 dependencies {
@@ -66,16 +63,6 @@ dependencies {
     // Coroutines for async deletion
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
     
-    // Google Drive API
-    implementation("com.google.android.gms:play-services-auth:20.7.0")
-    implementation("com.google.api-client:google-api-client-android:2.2.0")
-    implementation("com.google.apis:google-api-services-drive:v3-rev20230822-2.0.0")
-    
-    // WorkManager for background uploads
-    implementation("androidx.work:work-runtime-ktx:2.9.0")
-    
-    // Security for encrypted preferences
-    implementation("androidx.security:security-crypto:1.1.0-alpha06")
     implementation(libs.androidx.lifecycle.service)
     
     // MediaStyle notification support
