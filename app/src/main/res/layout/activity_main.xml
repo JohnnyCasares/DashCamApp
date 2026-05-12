@@ -36,60 +36,132 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tvSpeed">
 
-        <!-- Single camera preview (visible by default) -->
-        <androidx.camera.view.PreviewView
-            android:id="@+id/viewFinder"
+        <!-- FrameLayout so banner can layer on top of previews -->
+        <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:visibility="visible" />
+            android:layout_height="match_parent">
 
-        <!-- Camera2 preview for background recording -->
-        <SurfaceView
-            android:id="@+id/camera2Preview"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:visibility="gone" />
-
-        <!-- Dual camera preview container (hidden by default) -->
-        <LinearLayout
-            android:id="@+id/dualPreviewContainer"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="vertical"
-            android:visibility="gone">
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@color/md_theme_surfaceVariant"
-                android:gravity="center"
-                android:text="Back Camera" />
-
+            <!-- Single camera preview (CameraX — visible when in foreground) -->
             <androidx.camera.view.PreviewView
-                android:id="@+id/viewFinderBack"
+                android:id="@+id/viewFinder"
                 android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1" />
+                android:layout_height="match_parent"
+                android:visibility="visible" />
 
-            <View
+            <!-- Camera2 preview surface (unused — Camera2 runs headless) -->
+            <SurfaceView
+                android:id="@+id/camera2Preview"
                 android:layout_width="match_parent"
-                android:layout_height="2dp"
-                android:background="?android:attr/listDivider" />
+                android:layout_height="match_parent"
+                android:visibility="gone" />
 
-            <TextView
+            <!-- Dual camera preview container (hidden by default) -->
+            <LinearLayout
+                android:id="@+id/dualPreviewContainer"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@color/md_theme_surfaceVariant"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@color/md_theme_surfaceVariant"
+                    android:gravity="center"
+                    android:text="Back Camera" />
+
+                <androidx.camera.view.PreviewView
+                    android:id="@+id/viewFinderBack"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="2dp"
+                    android:background="?android:attr/listDivider" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@color/md_theme_surfaceVariant"
+                    android:gravity="center"
+                    android:text="Front Camera" />
+
+                <androidx.camera.view.PreviewView
+                    android:id="@+id/viewFinderFront"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1" />
+
+            </LinearLayout>
+
+            <!-- ═══════════════════════════════════════════════════════════════
+                 "Recording in Background" overlay banner.
+                 Visible only when Camera2 service is recording and the app
+                 is in the foreground (state = CAMERA2_BANNER_VISIBLE).
+                 Tapping this (or btnOpenPreview) hands off back to CameraX.
+                 ═══════════════════════════════════════════════════════════════ -->
+            <LinearLayout
+                android:id="@+id/layoutPreviewBanner"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
                 android:gravity="center"
-                android:text="Front Camera" />
+                android:background="#CC000000"
+                android:clickable="true"
+                android:focusable="true"
+                android:visibility="gone">
 
-            <androidx.camera.view.PreviewView
-                android:id="@+id/viewFinderFront"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1" />
+                <!-- Pulsing camera icon -->
+                <ImageView
+                    android:id="@+id/ivBannerIcon"
+                    android:layout_width="72dp"
+                    android:layout_height="72dp"
+                    android:src="@drawable/ic_camera"
+                    android:tint="#FF4444"
+                    android:layout_marginBottom="16dp" />
 
-        </LinearLayout>
+                <!-- "Recording in Background" label -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Recording in Background"
+                    android:textColor="@android:color/white"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="8dp" />
+
+                <!-- Live duration counter -->
+                <TextView
+                    android:id="@+id/tvBannerTimer"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="00:00"
+                    android:textColor="#FF4444"
+                    android:textSize="36sp"
+                    android:textStyle="bold"
+                    android:fontFamily="monospace"
+                    android:layout_marginBottom="32dp" />
+
+                <!-- "Open Preview" chip-style button -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnOpenPreview"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="▶  Open Preview"
+                    android:textSize="16sp"
+                    android:paddingHorizontal="28dp"
+                    android:paddingVertical="12dp"
+                    app:cornerRadius="50dp"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:textColor="@android:color/white"
+                    app:strokeColor="@android:color/white"
+                    app:strokeWidth="2dp" />
+
+            </LinearLayout>
+
+        </FrameLayout>
 
     </com.google.android.material.card.MaterialCardView>
 

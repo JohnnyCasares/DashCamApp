@@ -19,11 +19,11 @@ class GalleryService : GalleryDataService {
             MediaStore.Video.Media.DURATION
         )
 
-        // The folder path you used when saving. Must be exact.
-        val relativePath = "Movies/DashCam/"
+        // The folder path you used when saving. Use LIKE to match subdirectories (Session folders).
+        val relativePath = "Movies/DashCam/%"
 
         // The 'selection' is the WHERE clause of our query.
-        val selection = "${MediaStore.Video.Media.RELATIVE_PATH} = ?"
+        val selection = "${MediaStore.Video.Media.RELATIVE_PATH} LIKE ?"
         val selectionArgs = arrayOf(relativePath)
 
         // The order to sort the results

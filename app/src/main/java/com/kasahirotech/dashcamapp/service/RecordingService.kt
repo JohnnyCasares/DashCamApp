@@ -29,6 +29,17 @@ class RecordingService : LifecycleService() {
     companion object {
         const val ACTION_START_RECORDING = "com.kasahirotech.dashcamapp.START_RECORDING"
         const val ACTION_STOP_RECORDING = "com.kasahirotech.dashcamapp.STOP_RECORDING"
+        /**
+         * Phase 1 of background hand-off: called from onPause (app still foreground).
+         * Starts the FGS notification so the OS grants camera access in the background.
+         * Does NOT open the camera yet — CameraX still owns it.
+         */
+        const val ACTION_PREPARE_FOREGROUND = "com.kasahirotech.dashcamapp.PREPARE_FOREGROUND"
+        /**
+         * Phase 2 of background hand-off: called once CameraX has released the camera.
+         * Carries the same EXTRA_* extras as ACTION_START_RECORDING.
+         */
+        const val ACTION_BEGIN_RECORDING = "com.kasahirotech.dashcamapp.BEGIN_RECORDING"
         const val BROADCAST_RECORDING_STOPPED = "com.kasahirotech.dashcamapp.RECORDING_STOPPED"
         const val NOTIFICATION_ID = 1001
         const val CHANNEL_ID = "recording_channel"
@@ -36,6 +47,10 @@ class RecordingService : LifecycleService() {
         // Intent extras
         const val EXTRA_AUDIO_ENABLED = "audio_enabled"
         const val EXTRA_VIDEO_QUALITY = "video_quality"
+        /** Absolute path to the session directory; Camera2 segment is written here. */
+        const val EXTRA_SESSION_DIR = "session_dir"
+        /** Broadcast extra: absolute path of the completed segment file. */
+        const val EXTRA_OUTPUT_FILE = "output_file"
         
         private const val TAG = "RecordingService"
         private const val FILENAME_FORMAT = "yyyy-MM-dd-HH-mm-ss-SSS"
@@ -84,30 +99,41 @@ class RecordingService : LifecycleService() {
         }
         
         when (intent.action) {
-            ACTION_START_RECORDING -> {
-                Log.d(TAG, "Starting recording")
+            ACTION_PREPARE_FOREGROUND -> {
+                // Phase 1: establish the FGS notification while app is still foreground.
+                // Do NOT open the camera yet — CameraX still owns it.
+                Log.d(TAG, "Preparing foreground service (camera not opened yet)")
+                startForegroundService()
+            }
+            ACTION_BEGIN_RECORDING -> {
+                // Phase 2: CameraX has released the camera, start Camera2 recording.
+                Log.d(TAG, "Beginning Camera2 recording")
                 val audioEnabled = intent.getBooleanExtra(EXTRA_AUDIO_ENABLED, false)
                 val qualityName = intent.getStringExtra(EXTRA_VIDEO_QUALITY) ?: "FHD"
+                val sessionDirPath = intent.getStringExtra(EXTRA_SESSION_DIR)
                 val quality = when (qualityName) {
-                    "HD" -> Quality.HD
-                    "FHD" -> Quality.FHD
-                    "UHD" -> Quality.UHD
-                    else -> Quality.FHD
+                    "HD" -> Quality.HD; "FHD" -> Quality.FHD; "UHD" -> Quality.UHD; else -> Quality.FHD
                 }
-                
+                startRecording(audioEnabled, quality, sessionDirPath)
+            }
+            ACTION_START_RECORDING -> {
+                // Legacy single-shot path (kept for compatibility)
+                Log.d(TAG, "Starting recording (legacy path)")
+                val audioEnabled = intent.getBooleanExtra(EXTRA_AUDIO_ENABLED, false)
+                val qualityName = intent.getStringExtra(EXTRA_VIDEO_QUALITY) ?: "FHD"
+                val sessionDirPath = intent.getStringExtra(EXTRA_SESSION_DIR)
+                val quality = when (qualityName) {
+                    "HD" -> Quality.HD; "FHD" -> Quality.FHD; "UHD" -> Quality.UHD; else -> Quality.FHD
+                }
                 startForegroundService()
-                startRecording(audioEnabled, quality)
+                startRecording(audioEnabled, quality, sessionDirPath)
             }
             ACTION_STOP_RECORDING -> {
-                Log.d(TAG, "Stopping recording via notification")
+                Log.d(TAG, "Stopping recording via intent")
                 stopRecordingAndService()
             }
-            null -> {
-                Log.w(TAG, "Received intent with null action")
-            }
-            else -> {
-                Log.w(TAG, "Received unknown action: ${intent.action}")
-            }
+            null -> Log.w(TAG, "Received intent with null action")
+            else -> Log.w(TAG, "Received unknown action: ${intent.action}")
         }
         return START_STICKY
     }
@@ -131,8 +157,14 @@ class RecordingService : LifecycleService() {
             isRecording = false
             isServiceRecording = false
             
-            // Add video to MediaStore
-            addVideoToMediaStore(outputFile)
+            // Broadcast stopped + file path so MainActivity can register the segment
+            // MainActivity's broadcast receiver will call SessionManager.addSegment,
+            // which now handles the MediaStore scanning.
+            val broadcastIntent = Intent(BROADCAST_RECORDING_STOPPED).apply {
+                putExtra(EXTRA_OUTPUT_FILE, outputFile.absolutePath)
+            }
+            sendBroadcast(broadcastIntent)
+            Log.d(TAG, "Broadcast sent: Recording stopped — ${outputFile.name}")
         }
         
         override fun onRecordingError(error: String) {
@@ -149,99 +181,51 @@ class RecordingService : LifecycleService() {
     }
     
     /**
-     * Start recording with BackgroundCameraManager
+     * Start recording with BackgroundCameraManager.
+     * @param sessionDirPath If provided, the Camera2 segment is written into this directory.
+     *                       Otherwise falls back to the legacy Movies/DashCam/ directory.
      */
-    private fun startRecording(audioEnabled: Boolean, quality: Quality) {
+    private fun startRecording(audioEnabled: Boolean, quality: Quality, sessionDirPath: String? = null) {
         if (!hasEnoughStorage()) {
-            Toast.makeText(
-                this,
-                "Insufficient storage space",
-                Toast.LENGTH_SHORT
-            ).show()
+            Toast.makeText(this, "Insufficient storage space", Toast.LENGTH_SHORT).show()
             stopSelf()
             return
         }
         
         try {
-            // Create output file
-            val outputFile = createOutputFile()
+            val outputFile = createOutputFile(sessionDirPath)
             currentOutputFile = outputFile
             
-            // Start recording
             val success = backgroundCamera?.startRecording(audioEnabled, quality, outputFile) ?: false
             
             if (!success) {
                 Log.e(TAG, "Failed to start recording")
-                Toast.makeText(
-                    this,
-                    "Failed to start recording",
-                    Toast.LENGTH_SHORT
-                ).show()
+                Toast.makeText(this, "Failed to start recording", Toast.LENGTH_SHORT).show()
                 stopSelf()
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error starting recording", e)
-            Toast.makeText(
-                this,
-                "Error starting recording: ${e.message}",
-                Toast.LENGTH_SHORT
-            ).show()
+            Toast.makeText(this, "Error starting recording: ${e.message}", Toast.LENGTH_SHORT).show()
             stopSelf()
         }
     }
     
     /**
-     * Create output file for recording
+     * Create output file for recording.
+     * @param sessionDirPath If non-null, writes into the session subfolder;
+     *                       otherwise writes into the legacy Movies/DashCam/ root.
      */
-    private fun createOutputFile(): File {
+    private fun createOutputFile(sessionDirPath: String? = null): File {
         val name = SimpleDateFormat(FILENAME_FORMAT, Locale.US).format(System.currentTimeMillis())
-        val storageDir = File(
-            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES),
-            "DashCam"
-        )
-        
-        if (!storageDir.exists()) {
-            storageDir.mkdirs()
+        val storageDir = if (sessionDirPath != null) {
+            File(sessionDirPath).also { if (!it.exists()) it.mkdirs() }
+        } else {
+            File(
+                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES),
+                "DashCam"
+            ).also { if (!it.exists()) it.mkdirs() }
         }
-        
         return File(storageDir, "$name.mp4")
-    }
-    
-    /**
-     * Add video to MediaStore
-     */
-    private fun addVideoToMediaStore(file: File) {
-        try {
-            val contentValues = ContentValues().apply {
-                put(MediaStore.MediaColumns.DISPLAY_NAME, file.name)
-                put(MediaStore.MediaColumns.MIME_TYPE, "video/mp4")
-                put(MediaStore.Video.Media.RELATIVE_PATH, "Movies/DashCam")
-                // Don't set DATA field - it's managed by MediaStore
-            }
-            
-            val uri = contentResolver.insert(
-                MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
-                contentValues
-            )
-            
-            if (uri != null) {
-                // Copy file content to MediaStore URI
-                contentResolver.openOutputStream(uri)?.use { outputStream ->
-                    file.inputStream().use { inputStream ->
-                        inputStream.copyTo(outputStream)
-                    }
-                }
-                
-                // Delete original file after copying to MediaStore
-                file.delete()
-                
-                Log.d(TAG, "Video added to MediaStore: $uri")
-            } else {
-                Log.e(TAG, "Failed to create MediaStore entry")
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error adding video to MediaStore", e)
-        }
     }
 
     private fun stopRecordingAndService() {
@@ -255,16 +239,16 @@ class RecordingService : LifecycleService() {
             
             stopTimer()
             
-            // Broadcast that recording has stopped so MainActivity can update UI
-            val broadcastIntent = Intent(BROADCAST_RECORDING_STOPPED)
-            sendBroadcast(broadcastIntent)
-            Log.d(TAG, "Broadcast sent: Recording stopped")
+            // NOTE: broadcast is now sent from the onRecordingStopped callback
+            // (which carries the file path). Don't send a duplicate here.
             
             stopForeground(STOP_FOREGROUND_REMOVE)
             stopSelf()
         } catch (e: Exception) {
             Log.e(TAG, "Error stopping recording", e)
             isServiceRecording = false
+            // Still send a broadcast so the UI can recover
+            sendBroadcast(Intent(BROADCAST_RECORDING_STOPPED))
             stopSelf()
         }
     }

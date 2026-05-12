@@ -23,11 +23,15 @@ class GalleryAdapter(
     inner class VideoGalleryViewHolder(private val binding: ItemVideoThumbnailBinding) :
         RecyclerView.ViewHolder(binding.root) {
         fun bind(videoItem: AppVideo, isSelected: Boolean) {
-            // Load thumbnail of a specific media item.
-            val thumbnail: Bitmap =
-                binding.root.context.contentResolver.loadThumbnail(
+            // Load thumbnail safely (MediaStore may have stale entries for deleted files)
+            var thumbnail: Bitmap? = null
+            try {
+                thumbnail = binding.root.context.contentResolver.loadThumbnail(
                     videoItem.uri, Size(640, 480), null
                 )
+            } catch (e: Exception) {
+                android.util.Log.w("GalleryAdapter", "Failed to load thumbnail for ${videoItem.uri}", e)
+            }
 
             // 1. Get the duration in total seconds
             val durationInSeconds = videoItem.duration / 1000
